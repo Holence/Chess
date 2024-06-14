@@ -1,16 +1,20 @@
 #include "engine.h"
-#include <QDebug>
 
-Engine::Engine() {
-    board = new Cell[64]{nullptr};
-    state = GameState::Unfinished;
+Engine::Engine() : board() { state = GameState::Unfinished; }
+
+Engine::~Engine() {}
+
+GameState Engine::checkGameState() {
+    // King
+    return GameState::Unfinished;
 }
 
-Engine::~Engine() { delete board; }
-
-Piece *Engine::getPiece(Position pos) {}
+GameState Engine::nextGameState(Position from, Position to) {
+    board.movePiece(from, to);
+    state = checkGameState();
+    return state;
+}
 
 QList<Position> Engine::getPossibleMove(Position pos) {
-    Piece *p = getPiece(pos);
-    return p->getPossibleMove(board, pos);
+    return board.getPossibleMove(pos);
 }

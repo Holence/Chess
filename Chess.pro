@@ -9,13 +9,16 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    engine/board.cpp \
     engine/engine.cpp \
     engine/king.cpp \
     engine/piece.cpp \
+    engine/position.cpp \
     main.cpp \
     mainwindow.cpp
 
 HEADERS += \
+    engine/board.h \
     engine/engine.h \
     engine/king.h \
     engine/piece.h \

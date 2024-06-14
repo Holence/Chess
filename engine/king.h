@@ -4,9 +4,10 @@
 #include "piece.h"
 
 class King : public Piece {
+
 public:
-    King();
-    QList<Position> getPossibleMove(Piece **board, Position pos);
+    King(Piece_Type type, Piece_Color color);
+    QList<Position> getPossibleMove(Position pos);
 };
 
 #endif // KING_H

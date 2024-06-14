@@ -1,12 +1,7 @@
 #ifndef ENGINE_H
 #define ENGINE_H
 
-#include "piece.h"
-
-// 每个Cell要么是指向Piece的指针，要么是nullptr
-#define Cell Piece *
-// Board是Cell的Array
-#define Board Cell *
+#include "board.h"
 
 enum class GameState {
     WhiteWin,
@@ -21,14 +16,13 @@ class Engine {
 public:
     Engine();
     ~Engine();
-    Piece *getPiece(Position pos);
+    GameState checkGameState();
+    GameState nextGameState(Position from, Position to);
     QList<Position> getPossibleMove(Position pos);
 
 private:
     Board board;
     GameState state;
-    Position WhiteKingPos;
-    Position BlackKingPos;
 };
 
 #endif // ENGINE_H
