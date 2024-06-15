@@ -19,12 +19,20 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 private slots:
-    void cellClicked(Position pos);
-    void cellCanceled(Position pos);
+    void cellSelected(Position pos);
+    void cellCanceled();
 
 private:
     Ui::MainWindow *ui;
-    QList<CellButton *> cellList;
     Engine engine;
+
+    QMap<Piece_Type, QString> WhiteIcon, BlackIcon;
+    void setCellIcon(Position pos, Piece *p);
+
+    CellButton **board;
+    CellButton *getCell(Position pos);
+
+    CellButton *selectedCell;
+    QList<CellButton *> highlightCellList;
 };
 #endif // MAINWINDOW_H

@@ -7,11 +7,11 @@ Board::Board() {
     Piece *p;
     p = new King(Piece_Type::King, Piece_Color::White);
     WhitePieces.append(p);
-    putPiece(p, Position{1, 1});
+    putPiece(p, Position{1, 3});
 
     p = new King(Piece_Type::King, Piece_Color::Black);
     BlackPieces.append(p);
-    putPiece(p, Position{6, 6});
+    putPiece(p, Position{6, 8});
 }
 
 Board::~Board() {
@@ -51,8 +51,7 @@ QList<Position> Board::getPossibleMove(Position pos) {
     if (p != nullptr)
         return p->getPossibleMove(pos);
     else {
-        QList<Position> l;
-        return l;
+        return QList<Position>();
     }
 }
 

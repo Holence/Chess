@@ -11,7 +11,7 @@ public:
     CellButton(Position pos);
 
 signals:
-    void rightClicked(Position pos);
+    void rightClicked();
     void leftClicked(Position pos);
 private slots:
     void mousePressEvent(QMouseEvent *e);

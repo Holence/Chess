@@ -4,8 +4,14 @@
 #include "position.h"
 #include <QList>
 
-enum class Piece_Type { Pawn, King, Queen, Rook, Bishop, Knight };
-enum class Piece_Color { White, Black };
+enum class Piece_Type { Pawn,
+                        King,
+                        Queen,
+                        Rook,
+                        Bishop,
+                        Knight };
+enum class Piece_Color { White,
+                         Black };
 
 class Piece {
 public:
@@ -13,8 +19,9 @@ public:
     virtual QList<Position> getPossibleMove(Position pos) = 0;
     virtual ~Piece() = default;
     Piece_Color getColor();
+    Piece_Type getType();
 
-private:
+protected:
     Piece_Type type;
     Piece_Color color;
 };

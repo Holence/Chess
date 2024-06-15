@@ -6,3 +6,5 @@ Piece::Piece(Piece_Type type, Piece_Color color) {
 }
 
 Piece_Color Piece::getColor() { return color; }
+
+Piece_Type Piece::getType() { return type; }

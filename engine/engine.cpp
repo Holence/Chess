@@ -18,3 +18,7 @@ GameState Engine::nextGameState(Position from, Position to) {
 QList<Position> Engine::getPossibleMove(Position pos) {
     return board.getPossibleMove(pos);
 }
+
+Piece *Engine::getPiece(Position pos) {
+    return board.getPiece(pos);
+}

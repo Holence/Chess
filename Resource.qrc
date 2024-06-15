@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/img">
+    <qresource prefix="/">
         <file>img/bb.png</file>
         <file>img/bg.png</file>
         <file>img/bk.png</file>

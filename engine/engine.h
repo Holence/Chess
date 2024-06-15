@@ -18,7 +18,9 @@ public:
     ~Engine();
     GameState checkGameState();
     GameState nextGameState(Position from, Position to);
+
     QList<Position> getPossibleMove(Position pos);
+    Piece *getPiece(Position pos);
 
 private:
     Board board;

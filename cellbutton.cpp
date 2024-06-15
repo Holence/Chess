@@ -6,7 +6,7 @@ CellButton::CellButton(Position pos) {
 
 void CellButton::mousePressEvent(QMouseEvent *e) {
     if (e->button() == Qt::RightButton) {
-        emit rightClicked(pos);
+        emit rightClicked();
     } else if (e->button() == Qt::LeftButton) {
         emit leftClicked(pos);
     }
