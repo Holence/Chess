@@ -1,10 +1,26 @@
 # Chess
 
+TODO:
 
+- replay file
+
+  `Position from - Position to - Piece_Type eat`
+
+  这样也就支持倒推（悔棋）
+
+- 单人模拟
+
+- 局域网对战
+
+- 人机对战
 
 # Design
 
 ## Backend
+
+需要board 8x8 array记录着piece的指针（位置空的话为nullptr），因为界面点击的时候传入的是位置，engine需要快速对应到piece并给出PossibleMove，再次点击另一个位置，给engine传入两个位置from&to，执行movePiece
+
+每个piece也要记录自己的位置，因为计算某个落点施加的压力`caclPressure`时要遍历场上某一方所有的棋子（不光是bot需要，判断King是否被将也需要遍历）
 
 ### Engine
 
@@ -42,6 +58,7 @@ void movePiece(Position from, Position to){
 
 - Piece_Color White / Black
 - Piece_Type Pawn, King, Queen, Rook, Bishop, Knight
+- Position pos
 
 ```c++
 // 每种兵的基础走法 返回棋盘范围内所有可能的落点

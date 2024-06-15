@@ -15,6 +15,9 @@
 
 struct Position {
     int x, y;
+    bool operator==(const Position &that) {
+        return x == that.x and y == that.y;
+    }
 };
 
 bool isValidPos(Position pos);

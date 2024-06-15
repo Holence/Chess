@@ -18,6 +18,13 @@ class MainWindow : public QMainWindow {
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+    void drawBoard();
+    void SinglePlayerGame();
+    void GameOver();
+
+signals:
+    void pieceMoved();
+    void gameEnded();
 
 private slots:
     void cellSelected(Position pos);
@@ -27,9 +34,10 @@ private:
     Ui::MainWindow *ui;
     Engine engine;
 
+    Piece_Color selfColor;
+
     QMap<Piece_Type, QString> WhiteIcon, BlackIcon;
-    void setCellIcon(Position pos, Piece *p);
-    void clearCellIcon(Position pos);
+    void updateCellIcon(Position pos);
 
     CellButton **board;
     CellButton *getCell(Position pos);

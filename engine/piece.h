@@ -10,20 +10,29 @@ enum class Piece_Type { Pawn,
                         Rook,
                         Bishop,
                         Knight };
+
 enum class Piece_Color { White,
                          Black };
 
 class Piece {
 public:
-    Piece(Piece_Type type, Piece_Color color);
-    virtual QList<Position> getPossibleMove(Position pos) = 0;
+    Piece(Piece_Type type, Piece_Color color, Position pos);
+    virtual QList<Position> getPossibleMove() = 0;
     virtual ~Piece() = default;
     Piece_Color getColor();
     Piece_Type getType();
+    Position getPos();
+
+    void setType(Piece_Type type);
+    void setColor(Piece_Color newColor);
+    void setPos(Position pos);
 
 protected:
     Piece_Type type;
     Piece_Color color;
+    Position pos;
 };
+
+Piece_Color flipPieceColor(Piece_Color selfColor);
 
 #endif // PIECE_H

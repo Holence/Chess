@@ -1,8 +1,8 @@
 #include "king.h"
 
-King::King(Piece_Type type, Piece_Color color) : Piece(type, color) {}
+King::King(Piece_Type type, Piece_Color color, Position pos) : Piece(type, color, pos) {}
 
-QList<Position> King::getPossibleMove(Position pos) {
+QList<Position> King::getPossibleMove() {
     QList<Position> l;
     for (int i = -1; i <= 1; i++) {
         for (int j = -1; j <= 1; j++) {

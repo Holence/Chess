@@ -6,8 +6,8 @@
 class King : public Piece {
 
 public:
-    King(Piece_Type type, Piece_Color color);
-    QList<Position> getPossibleMove(Position pos);
+    King(Piece_Type type, Piece_Color color, Position pos);
+    QList<Position> getPossibleMove();
 };
 
 #endif // KING_H
