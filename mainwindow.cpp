@@ -49,20 +49,36 @@ MainWindow::~MainWindow() {
 }
 
 void MainWindow::cellSelected(Position pos) {
-    cellCanceled();
-
     qInfo() << "Enter Selecting" << selectedCell;
-    selectedCell = getCell(pos);
+    CellButton *current_select_btn = getCell(pos);
 
-    QList<Position> l = engine.getPossibleMove(pos);
-    if (l.isEmpty()) {
-        // 没有选中子 或 选中子的没有可行的走位
-        selectedCell = nullptr;
-    } else {
-        foreach (Position pos, l) {
-            CellButton *btn = getCell(pos);
-            btn->setStyleSheet("background-color: rgba(255,255,0,63);");
-            highlightCellList.append(btn);
+    // 之前有选中有效的棋子
+    if (selectedCell) {
+        // 如果当前点的是可行的走位，则移动棋子
+        if (highlightCellList.contains(current_select_btn)) {
+            Position orig_pos = selectedCell->getPos();
+            GameState state = engine.nextGameState(orig_pos, pos);
+            clearCellIcon(orig_pos);
+            setCellIcon(pos, engine.getPiece(pos));
+            // TODO Handel Game Over
+        }
+        cellCanceled();
+    }
+    //
+    else {
+        // 获取可行的走位
+        QList<Position> l = engine.getPossibleMove(pos);
+        if (l.isEmpty()) {
+            // 没有选中棋子 或 选的棋子没有可行的走位
+            selectedCell = nullptr;
+        } else {
+            selectedCell = current_select_btn;
+            foreach (Position pos, l) {
+                // 标为黄色
+                CellButton *btn = getCell(pos);
+                btn->setStyleSheet("background-color: rgba(255,255,0,63);");
+                highlightCellList.append(btn);
+            }
         }
     }
     qInfo() << "Quit Selecting" << selectedCell;
@@ -89,6 +105,10 @@ void MainWindow::setCellIcon(Position pos, Piece *p) {
     } else {
         getCell(pos)->setIcon(QIcon(QString()));
     }
+}
+
+void MainWindow::clearCellIcon(Position pos) {
+    getCell(pos)->setIcon(QIcon(QString()));
 }
 
 CellButton *MainWindow::getCell(Position pos) {

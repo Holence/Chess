@@ -18,6 +18,7 @@ class MainWindow : public QMainWindow {
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+
 private slots:
     void cellSelected(Position pos);
     void cellCanceled();
@@ -28,6 +29,7 @@ private:
 
     QMap<Piece_Type, QString> WhiteIcon, BlackIcon;
     void setCellIcon(Position pos, Piece *p);
+    void clearCellIcon(Position pos);
 
     CellButton **board;
     CellButton *getCell(Position pos);

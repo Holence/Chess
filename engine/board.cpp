@@ -31,7 +31,7 @@ Board::~Board() {
 }
 
 void Board::movePiece(Position from, Position to) {
-    // Pawn Promotion?
+    // TODO Pawn Promotion?
     Piece *p_from = getPiece(from);
     Piece *p_to = getPiece(to);
     qInfo() << "Check remove?";
@@ -42,11 +42,12 @@ void Board::movePiece(Position from, Position to) {
             BlackDeadPieces.append(p_to);
         qInfo() << "Removed";
     }
+    putPiece(nullptr, from);
     putPiece(p_from, to);
 }
 
 QList<Position> Board::getPossibleMove(Position pos) {
-    // filter with board
+    // TODO filter with board
     Piece *p = getPiece(pos);
     if (p != nullptr)
         return p->getPossibleMove(pos);
@@ -57,7 +58,4 @@ QList<Position> Board::getPossibleMove(Position pos) {
 
 Piece *Board::getPiece(Position pos) { return board[convertPosToIndex(pos)]; }
 
-/**
- * 设置初始棋子的位置
- */
 void Board::putPiece(Piece *p, Position pos) { board[convertPosToIndex(pos)] = p; }

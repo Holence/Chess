@@ -9,6 +9,7 @@ class CellButton : public QPushButton {
     Q_OBJECT
 public:
     CellButton(Position pos);
+    Position getPos();
 
 signals:
     void rightClicked();
