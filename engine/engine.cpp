@@ -1,6 +1,6 @@
 #include "engine.h"
 
-Engine::Engine() : board() { state = GameState::Unfinished; }
+Engine::Engine() : board() { state = checkGameState(); }
 
 Engine::~Engine() {}
 

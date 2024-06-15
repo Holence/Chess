@@ -18,5 +18,6 @@ struct Position {
 };
 
 bool isValidPos(Position pos);
+int convertPosToIndex(Position pos);
 
 #endif // POSITION_H

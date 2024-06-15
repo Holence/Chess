@@ -16,8 +16,6 @@ public:
     QList<Position> getPossibleMove(Position pos);
 
 private:
-    int getBoardIndex(Position pos);
-
     Cell *board; // board是指向Cell array的指针
     QList<Piece *> WhitePieces;
     QList<Piece *> WhiteDeadPieces;

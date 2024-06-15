@@ -12,9 +12,6 @@ Board::Board() {
     p = new King(Piece_Type::King, Piece_Color::Black);
     BlackPieces.append(p);
     putPiece(p, Position{6, 6});
-
-    qInfo() << getPiece(Position{1, 1});
-    qInfo() << getPiece(Position{1, 2});
 }
 
 Board::~Board() {
@@ -59,11 +56,9 @@ QList<Position> Board::getPossibleMove(Position pos) {
     }
 }
 
-Piece *Board::getPiece(Position pos) { return board[getBoardIndex(pos)]; }
+Piece *Board::getPiece(Position pos) { return board[convertPosToIndex(pos)]; }
 
 /**
  * 设置初始棋子的位置
  */
-void Board::putPiece(Piece *p, Position pos) { board[getBoardIndex(pos)] = p; }
-
-int Board::getBoardIndex(Position pos) { return pos.x - 1 + (pos.y - 1) * 8; }
+void Board::putPiece(Piece *p, Position pos) { board[convertPosToIndex(pos)] = p; }
