@@ -10,7 +10,6 @@ CONFIG += c++17
 
 SOURCES += \
     cellbutton.cpp \
-    engine/board.cpp \
     engine/engine.cpp \
     engine/king.cpp \
     engine/piece.cpp \
@@ -20,7 +19,6 @@ SOURCES += \
 
 HEADERS += \
     cellbutton.h \
-    engine/board.h \
     engine/engine.h \
     engine/king.h \
     engine/piece.h \
