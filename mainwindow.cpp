@@ -8,6 +8,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     WhiteIcon[Piece_Type::King] = ":/img/wk.png";
     BlackIcon[Piece_Type::King] = ":/img/bk.png";
+    WhiteIcon[Piece_Type::Rook] = ":/img/wr.png";
+    BlackIcon[Piece_Type::Rook] = ":/img/br.png";
 
     // draw board
     ui->widgetBoard->setFixedSize(QSize(800, 800));
@@ -131,7 +133,7 @@ void MainWindow::cellSelected(Position pos) {
     //
     else {
         Piece *p = engine.getPiece(pos);
-        // 如果选中棋子 且 选中了自己的棋子
+        // 如果选中棋子 且 选中了己方的棋子
         if (p and p->getColor() == selfColor) {
             // 获取可行的走位
             QList<Position> l = engine.getPossibleMove(pos);

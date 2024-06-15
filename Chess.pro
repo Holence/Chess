@@ -14,6 +14,7 @@ SOURCES += \
     engine/king.cpp \
     engine/piece.cpp \
     engine/position.cpp \
+    engine/rook.cpp \
     main.cpp \
     mainwindow.cpp
 
@@ -23,6 +24,7 @@ HEADERS += \
     engine/king.h \
     engine/piece.h \
     engine/position.h \
+    engine/rook.h \
     mainwindow.h
 
 FORMS += \

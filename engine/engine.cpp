@@ -1,5 +1,6 @@
 #include "engine.h"
 #include "king.h"
+#include "rook.h"
 #include <QDebug>
 Engine::Engine() {}
 
@@ -13,23 +14,37 @@ void Engine::newGame() {
     Piece *p;
     Position pos;
 
-    pos = Position{6, 5};
+    pos = Position{2, 2};
     p = new King(Piece_Type::King, Piece_Color::White, pos);
     WhitePieces.append(p);
     putPiece(p, pos);
     WhiteKing = p;
 
-    pos = Position{8, 6};
-    p = new King(Piece_Type::King, Piece_Color::White, pos);
+    pos = Position{1, 1};
+    p = new Rook(Piece_Type::Rook, Piece_Color::White, pos);
     WhitePieces.append(p);
     putPiece(p, pos);
-    WhiteKing = p;
 
-    pos = Position{8, 8};
+    pos = Position{8, 1};
+    p = new Rook(Piece_Type::Rook, Piece_Color::White, pos);
+    WhitePieces.append(p);
+    putPiece(p, pos);
+
+    pos = Position{5, 8};
     p = new King(Piece_Type::King, Piece_Color::Black, pos);
     BlackPieces.append(p);
     putPiece(p, pos);
     BlackKing = p;
+
+    pos = Position{1, 8};
+    p = new Rook(Piece_Type::Rook, Piece_Color::Black, pos);
+    BlackPieces.append(p);
+    putPiece(p, pos);
+
+    pos = Position{8, 8};
+    p = new Rook(Piece_Type::Rook, Piece_Color::Black, pos);
+    BlackPieces.append(p);
+    putPiece(p, pos);
 
     state = checkGameState();
 }
@@ -85,7 +100,8 @@ GameState Engine::checkGameState() {
             state = GameState::Draw;
     }
 
-    // Other Draw 只剩马？
+    // TODO CheckMate state 将会导致对方的getStrictFilteredPos有所受限
+    // TODO Other Draw 只剩马？
     else {
         state = GameState::Unfinished;
     }
@@ -131,11 +147,16 @@ QList<Position> Engine::getPossibleMove(Position pos) {
     }
 }
 
+/**
+ * 更广泛的走位范围，用于计算Pressure
+ *
+ * 是getStrictFilteredPos的父集
+ * @param p
+ * @return
+ */
 QList<Position> Engine::getBasicFilteredPos(Piece *p) {
-    // Rook、Bishop、Queen 不能跨越到其他棋子后方
-    // 可以走到对方棋子上
-    // 不能走到自己棋子上
-    // 横竖斜被遮挡，最后的位置包括对方的、不包括自己的
+    // Rook、Bishop、Queen 不能跨越到其他棋子后方 （**对方的王除外，因为将军的时候对方的王必须逃走**）
+    // 横竖斜未被遮挡的区域，最后的位置包括对方的（可以吃的），也包括己方的（看着的）
     QList<Position> l = p->getPossibleMove();
     Piece_Color selfColor = p->getColor();
     Position pos = p->getPos();
@@ -158,13 +179,19 @@ QList<Position> Engine::getBasicFilteredPos(Piece *p) {
 
                 Piece *p = getPiece(pos_check);
                 if (p) {
-                    // 遇到自己的，退出这个方向
+                    // 遇到己方的，加上这个位置，退出这个方向
                     if (p->getColor() == selfColor) {
-                        break;
-                    } else {
-                        // 遇到对方的，加上这个位置，退出这个方向
                         l.append(pos_check);
                         break;
+                    } else {
+                        // 遇到对方的，加上这个位置
+                        l.append(pos_check);
+                        if (p->getType() == Piece_Type::King)
+                            // 如果是对方的King，则后方也是势力范围
+                            continue;
+                        else
+                            // 否则，退出这个方向
+                            break;
                     }
                 } else {
                     // 遇到空位，加上这个位置，继续这个方向
@@ -180,10 +207,24 @@ QList<Position> Engine::getBasicFilteredPos(Piece *p) {
 QList<Position> Engine::getStrictFilteredPos(Piece *p) {
     QList<Position> l = getBasicFilteredPos(p);
 
+    Piece_Color selfColor = p->getColor();
     // TODO filter with board
     // - 被将军时其他兵唯一的自保行为
     // - Pawn是否可斜吃
     // - Pawn En passant
+
+    // 不能走到己方的棋子上
+    QList<Position> l_copy = l;
+    l.clear();
+    foreach (Position pos, l_copy) {
+        Piece *p = getPiece(pos);
+        if (p) {
+            if (p->getColor() != selfColor)
+                l.append(pos);
+        } else {
+            l.append(pos);
+        }
+    }
 
     // 如果是King，则不能走向对方的势力范围
     if (p->getType() == Piece_Type::King) {
