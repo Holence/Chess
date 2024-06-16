@@ -244,7 +244,9 @@ QList<Position> Engine::getSuppressingPos(Piece *p) {
  */
 QList<Position> Engine::getMovablePos(Piece *p) {
     QList<Position> l = getSuppressingPos(p);
+
     Piece_Color pieceColor = p->getColor();
+    Position piecePos = p->getPos();
 
     // 不能走到己方的棋子上
     QList<Position> l_copy = l;
@@ -271,7 +273,15 @@ QList<Position> Engine::getMovablePos(Piece *p) {
                     l.append(pos);
             }
         }
-        // TODO Pawn En passant
+        // En passant
+        if (EnPassantPawn != nullptr) {
+            Position EnPassantPos = EnPassantPawn->getPos();
+            foreach (Position pos, l_copy) {
+                // 斜吃的x与EnPassantPawn一致，且自身的y与EnPassantPawn一致
+                if (pos.x == EnPassantPos.x and piecePos.y == EnPassantPos.y)
+                    l.append(pos);
+            }
+        }
 
         // 到这里才给出向前进的pos，遇到任何子，都不能走上去
         foreach (Position pos, ((Pawn *)p)->getAdditionMove()) {
@@ -296,7 +306,7 @@ QList<Position> Engine::getMovablePos(Piece *p) {
         // 所以不管是否被将军，都要保证：走出一步后，老王是安全的
         QList<Position> l_copy = l;
         l.clear();
-        Position pos_from = p->getPos();
+        Position pos_from = piecePos;
         Piece *p_from = p;
 
         // 里面会模拟吃掉对方的棋子(BlackPieces/WhitePieces会被修改并复原)
@@ -311,9 +321,17 @@ QList<Position> Engine::getMovablePos(Piece *p) {
             // 模拟走出一步
             Piece *p_to = getPiece(pos_to);
 
-            board[convertPosToIndex(pos_from)] = nullptr;
+            if (p_from->getType() == Piece_Type::Pawn) {
+                // 作为Pawn，还能斜着走到空的位置，说明p_to一定是EnPassantPawn
+                if (pos_from.x != pos_to.x and p_to == nullptr) {
+                    p_to = EnPassantPawn;
+                }
+            }
+
+            clearPos(pos_from);
             // 吃子
             if (p_to != nullptr) {
+                clearPos(p_to->getPos());
                 index = (*OppPieces).indexOf(p_to); // 用indexOf、insert保证顺序不变
                 (*OppPieces).removeAt(index);
             }
@@ -327,10 +345,10 @@ QList<Position> Engine::getMovablePos(Piece *p) {
 
             // 恢复原状
             putPiece(p_from, pos_from);
-            board[convertPosToIndex(pos_to)] = nullptr;
+            clearPos(pos_to);
             if (p_to != nullptr) {
                 (*OppPieces).insert(index, p_to); // 用indexOf、insert保证顺序不变
-                putPiece(p_to, pos_to);
+                putPiece(p_to, p_to->getPos());
             }
         }
     }
@@ -364,12 +382,35 @@ GameState Engine::nextGameState(Position from, Position to) {
 
 void Engine::movePiece(Position pos_from, Position pos_to) {
     // TODO Pawn Promotion Menu?
+
     Piece *p_from = getPiece(pos_from);
     Piece *p_to = getPiece(pos_to);
 
-    board[convertPosToIndex(pos_from)] = nullptr;
+    // ----------------Pawn----------------
+    if (p_from->getType() == Piece_Type::Pawn) {
+        Pawn *p = (Pawn *)p_from;
+        p->setMoved();
+
+        // 作为Pawn，还能斜着走到空的位置，说明p_to一定是EnPassantPawn
+        if (pos_from.x != pos_to.x and p_to == nullptr) {
+            p_to = EnPassantPawn;
+        }
+
+        // 记录前进两格的Pawn
+        if (std::abs(pos_from.y - pos_to.y) == 2) {
+            EnPassantPawn = p;
+        } else {
+            EnPassantPawn = nullptr;
+        }
+    } else {
+        EnPassantPawn = nullptr;
+    }
+    // ------------------------------------
+
+    clearPos(pos_from);
     // 吃子
     if (p_to != nullptr) {
+        clearPos(p_to->getPos());
         if (p_to->getColor() == Piece_Color::White) {
             WhitePieces.removeOne(p_to);
             WhiteDeadPieces.append(p_to);
@@ -379,13 +420,6 @@ void Engine::movePiece(Position pos_from, Position pos_to) {
         }
     }
     putPiece(p_from, pos_to);
-
-    if (p_from->getType() == Piece_Type::Pawn)
-        handelPawnMove((Pawn *)p_from);
-}
-
-void Engine::handelPawnMove(Pawn *p) {
-    p->setMoved();
 }
 
 Piece *Engine::getPiece(Position pos) {
@@ -400,6 +434,10 @@ Piece *Engine::getPiece(Position pos) {
 void Engine::putPiece(Piece *p, Position pos) {
     board[convertPosToIndex(pos)] = p;
     p->setPos(pos);
+}
+
+void Engine::clearPos(Position pos) {
+    board[convertPosToIndex(pos)] = nullptr;
 }
 
 /**

@@ -45,6 +45,7 @@ private:
 
     void placePiece(Piece_Color color, bool reversed);
     void putPiece(Piece *p, Position pos);
+    void clearPos(Position pos);
     void movePiece(Position from, Position to);
 
     int caclPressure(Position pos, Piece_Color color);
@@ -54,7 +55,7 @@ private:
     QList<Position> getSuppressingPos(Piece *p);
     QList<Position> getMovablePos(Piece *p);
 
-    void handelPawnMove(Pawn *p);
+    Pawn *EnPassantPawn; // 之前一个State时（对手）前进两格的Pawn的Position
 };
 
 #endif // ENGINE_H
