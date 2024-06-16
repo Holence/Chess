@@ -89,7 +89,7 @@ void movePiece(Position from, Position to){
 ```c++
 // 每种兵的基础走法 返回棋盘范围内所有可能的落点
 // - King的Castling
-QList<Position> getBasicMove(board, pos);
+QList<Position> getAttackMove(board, pos);
 ```
 
 ## Frontend

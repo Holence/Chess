@@ -4,7 +4,7 @@ Knight::Knight(Piece_Color color, Position pos) : Piece(color, pos) {
     type = Piece_Type::Knight;
 }
 
-QList<Position> Knight::getBasicMove() {
+QList<Position> Knight::getAttackMove() {
     QList<Position> l;
     int m[] = {-2, -1, 1, 2};
     for (int i : m) {

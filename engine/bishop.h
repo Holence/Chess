@@ -6,7 +6,7 @@
 class Bishop : public Piece {
 public:
     Bishop(Piece_Color color, Position pos);
-    QList<Position> getBasicMove();
+    QList<Position> getAttackMove();
 };
 
 #endif // BISHOP_H

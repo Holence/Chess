@@ -14,6 +14,7 @@ SOURCES += \
     engine/engine.cpp \
     engine/king.cpp \
     engine/knight.cpp \
+    engine/pawn.cpp \
     engine/piece.cpp \
     engine/position.cpp \
     engine/queen.cpp \
@@ -27,6 +28,7 @@ HEADERS += \
     engine/engine.h \
     engine/king.h \
     engine/knight.h \
+    engine/pawn.h \
     engine/piece.h \
     engine/position.h \
     engine/queen.h \

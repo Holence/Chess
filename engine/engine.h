@@ -1,6 +1,7 @@
 #ifndef ENGINE_H
 #define ENGINE_H
 
+#include "pawn.h"
 #include "piece.h"
 
 // 每个Cell要么是指向Piece的指针，要么是nullptr
@@ -42,7 +43,7 @@ private:
     Piece *WhiteKing;
     Piece *BlackKing;
 
-    void placePiece(Piece_Color color, char *posCode, QList<Piece *> &PiecesList, Piece **king, Position posFunc(int));
+    void placePiece(Piece_Color color, bool reversed);
     void putPiece(Piece *p, Position pos);
     void movePiece(Position from, Position to);
 
@@ -52,6 +53,8 @@ private:
 
     QList<Position> getSuppressingPos(Piece *p);
     QList<Position> getMovablePos(Piece *p);
+
+    void handelPawnMove(Pawn *p);
 };
 
 #endif // ENGINE_H

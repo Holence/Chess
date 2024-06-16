@@ -2,14 +2,13 @@
 #include "bishop.h"
 #include "king.h"
 #include "knight.h"
+#include "pawn.h"
 #include "queen.h"
 #include "rook.h"
 #include <QDebug>
 
-char blackAtBottom[] = "r  kq  r        ";
-char whiteAtBottom[] = "rnbqbknr        ";
-
-// char ImWhite[] = "rnbqkbnrpppppppp";
+char blackAtBottom[] = "rnbkqbnrpppppppp";
+char whiteAtBottom[] = "rnbqkbnrpppppppp";
 
 Engine::Engine() {
 }
@@ -23,17 +22,41 @@ void Engine::newGame(Piece_Color colorAtBottom) {
     board = new Cell[64]{nullptr};
 
     if (colorAtBottom == Piece_Color::White) {
-        placePiece(Piece_Color::White, whiteAtBottom, WhitePieces, &WhiteKing, convertIndexToPos);
-        placePiece(Piece_Color::Black, whiteAtBottom, BlackPieces, &BlackKing, convertIndexToPosFlip);
+        placePiece(Piece_Color::White, false);
+        placePiece(Piece_Color::Black, true);
     } else {
-        placePiece(Piece_Color::Black, blackAtBottom, BlackPieces, &BlackKing, convertIndexToPos);
-        placePiece(Piece_Color::White, blackAtBottom, WhitePieces, &WhiteKing, convertIndexToPosFlip);
+        placePiece(Piece_Color::Black, false);
+        placePiece(Piece_Color::White, true);
     }
 
     state = checkGameState();
 }
 
-void Engine::placePiece(Piece_Color color, char *posCode, QList<Piece *> &PiecesList, Piece **king, Position posFunc(int)) {
+void Engine::placePiece(Piece_Color color, bool reversed) {
+
+    QList<Piece *> *PiecesList;
+    Piece **king;
+    char *posCode;
+    if (color == Piece_Color::White) {
+        PiecesList = &WhitePieces;
+        king = &WhiteKing;
+        posCode = whiteAtBottom;
+    } else {
+        PiecesList = &BlackPieces;
+        king = &BlackKing;
+        posCode = blackAtBottom;
+    }
+
+    Position (*posFunc)(int);
+    Pawn::Direction direction;
+    if (!reversed) {
+        posFunc = convertIndexToPos;
+        direction = Pawn::Direction::Up;
+    } else {
+        posFunc = convertIndexToPosFlip;
+        direction = Pawn::Direction::Down;
+    }
+
     Position pos;
     Piece *p;
     for (int i = 0; i < 16; i++) {
@@ -56,16 +79,14 @@ void Engine::placePiece(Piece_Color color, char *posCode, QList<Piece *> &Pieces
             p = new King(color, pos);
             *king = p;
             break;
-        // case 'p':
-        // p = new Pawn(color, pos);
-        // break;
+        case 'p':
+            p = new Pawn(color, pos, direction);
+            break;
         default:
             break;
         }
-        if (c != ' ') {
-            PiecesList.append(p);
-            putPiece(p, pos);
-        }
+        (*PiecesList).append(p);
+        putPiece(p, pos);
     }
 }
 
@@ -159,7 +180,7 @@ GameState Engine::checkGameState() {
  * @return
  */
 QList<Position> Engine::getSuppressingPos(Piece *p) {
-    QList<Position> l = p->getBasicMove();
+    QList<Position> l = p->getAttackMove();
     Piece_Color pieceColor = p->getColor();
     Position pos = p->getPos();
 
@@ -170,8 +191,8 @@ QList<Position> Engine::getSuppressingPos(Piece *p) {
 
     // Rook、Bishop、Queen 不能跨越到其他棋子后方 （**对方的王除外，因为将军的时候对方的王必须逃走**）
     // 也包括横竖斜未被遮挡的区域，最后的位置包括对方的子（可以吃的），也包括己方的子（看着的）
-    // 下面把横竖斜都过了一边，也就相当于包括了Pawn和King的走法
-    // Pawn的En passant在这里就是斜吃
+    // Pawn的在这里就只有斜吃
+    // 下面把横竖斜都过了一边，也就相当于包括了King、Pawn的走法
     QList<Position> l_copy = l;
     l.clear();
     int offset[3] = {-1, 0, 1};
@@ -238,9 +259,28 @@ QList<Position> Engine::getMovablePos(Piece *p) {
         }
     }
 
-    // TODO filter with board
-    // - Pawn是否可斜吃
-    // - Pawn En passant
+    // Pawn
+    if (p->getType() == Piece_Type::Pawn) {
+        // 如果斜着的地方有对方的子，则可斜吃
+        QList<Position> l_copy = l;
+        l.clear();
+        foreach (Position pos, l_copy) {
+            Piece *p = getPiece(pos);
+            if (p) {
+                if (p->getColor() != pieceColor)
+                    l.append(pos);
+            }
+        }
+        // TODO Pawn En passant
+
+        // 到这里才给出向前进的pos，遇到任何子，都不能走上去
+        foreach (Position pos, ((Pawn *)p)->getAdditionMove()) {
+            Piece *p = getPiece(pos);
+            if (!p) {
+                l.append(pos);
+            }
+        }
+    }
 
     // 如果是King，则不能走向对方的势力范围
     if (p->getType() == Piece_Type::King) {
@@ -339,6 +379,13 @@ void Engine::movePiece(Position pos_from, Position pos_to) {
         }
     }
     putPiece(p_from, pos_to);
+
+    if (p_from->getType() == Piece_Type::Pawn)
+        handelPawnMove((Pawn *)p_from);
+}
+
+void Engine::handelPawnMove(Pawn *p) {
+    p->setMoved();
 }
 
 Piece *Engine::getPiece(Position pos) {
