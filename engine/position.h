@@ -22,5 +22,6 @@ struct Position {
 
 bool isValidPos(Position pos);
 int convertPosToIndex(Position pos);
+Position convertIndexToPos(int index);
 
 #endif // POSITION_H

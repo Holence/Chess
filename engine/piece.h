@@ -16,7 +16,7 @@ enum class Piece_Color { White,
 
 class Piece {
 public:
-    Piece(Piece_Type type, Piece_Color color, Position pos);
+    Piece(Piece_Color color, Position pos);
     virtual QList<Position> getPossibleMove() = 0;
     virtual ~Piece() = default;
     Piece_Color getColor();
@@ -33,6 +33,6 @@ protected:
     Position pos;
 };
 
-Piece_Color flipPieceColor(Piece_Color selfColor);
+Piece_Color flipPieceColor(Piece_Color color);
 
 #endif // PIECE_H

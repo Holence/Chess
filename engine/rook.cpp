@@ -1,6 +1,8 @@
 #include "rook.h"
 
-Rook::Rook(Piece_Type type, Piece_Color color, Position pos) : Piece(type, color, pos) {}
+Rook::Rook(Piece_Color color, Position pos) : Piece(color, pos) {
+    type = Piece_Type::Rook;
+}
 
 QList<Position> Rook::getPossibleMove() {
     QList<Position> l;

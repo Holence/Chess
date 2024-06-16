@@ -1,74 +1,123 @@
 #include "engine.h"
 #include "king.h"
+#include "queen.h"
 #include "rook.h"
 #include <QDebug>
+
+char ImWhite[] = "r  qk  r                r  qk  r";
+char ImBlack[] = "r  kq  r                r  kq  r";
+
+// char ImWhite[] = "rnbqkbnrpppppppppppppppprnbqkbnr";
+// char ImBlack[] = "rnbkqbnrpppppppppppppppprnbkqbnr";
+
 Engine::Engine() {}
 
 Engine::~Engine() {
     endGame();
 }
 
-void Engine::newGame() {
+void Engine::newGame(Piece_Color selfColor) {
+    this->selfColor = selfColor;
+
     board = new Cell[64]{nullptr};
 
-    Piece *p;
+    char *posCode;
+    if (selfColor == Piece_Color::White)
+        posCode = ImWhite;
+    else
+        posCode = ImBlack;
+
     Position pos;
+    Piece *p;
 
-    pos = Position{2, 2};
-    p = new King(Piece_Type::King, Piece_Color::White, pos);
-    WhitePieces.append(p);
-    putPiece(p, pos);
-    WhiteKing = p;
+    for (int i = 0; i < 16; i++) {
+        char c = posCode[i];
+        pos = convertIndexToPos(i);
+        switch (c) {
+        case 'r':
+            p = new Rook(selfColor, pos);
+            break;
+        // case 'n':
+        //     p = new Knight(selfColor, pos);
+        //     break;
+        // case 'b':
+        // p = new Bishop(selfColor, pos);
+        // break;
+        case 'q':
+            p = new Queen(selfColor, pos);
+            break;
+        case 'k':
+            p = new King(selfColor, pos);
+            SelfKing = p;
+            break;
+        // case 'p':
+        // p = new Pawn(selfColor, pos);
+        // break;
+        default:
+            break;
+        }
+        if (c != ' ') {
+            SelfPieces.append(p);
+            putPiece(p, pos);
+        }
+    }
 
-    pos = Position{1, 1};
-    p = new Rook(Piece_Type::Rook, Piece_Color::White, pos);
-    WhitePieces.append(p);
-    putPiece(p, pos);
-
-    pos = Position{8, 1};
-    p = new Rook(Piece_Type::Rook, Piece_Color::White, pos);
-    WhitePieces.append(p);
-    putPiece(p, pos);
-
-    pos = Position{5, 8};
-    p = new King(Piece_Type::King, Piece_Color::Black, pos);
-    BlackPieces.append(p);
-    putPiece(p, pos);
-    BlackKing = p;
-
-    pos = Position{1, 8};
-    p = new Rook(Piece_Type::Rook, Piece_Color::Black, pos);
-    BlackPieces.append(p);
-    putPiece(p, pos);
-
-    pos = Position{8, 8};
-    p = new Rook(Piece_Type::Rook, Piece_Color::Black, pos);
-    BlackPieces.append(p);
-    putPiece(p, pos);
+    Piece_Color oppColor = flipPieceColor(selfColor);
+    for (int i = 16; i < 32; i++) {
+        char c = posCode[i];
+        pos = convertIndexToPos(i + 32);
+        switch (c) {
+        case 'r':
+            p = new Rook(oppColor, pos);
+            break;
+        // case 'n':
+        //     p = new Knight(oppColor, pos);
+        //     break;
+        // case 'b':
+        // p = new Bishop(oppColor, pos);
+        // break;
+        case 'q':
+            p = new Queen(oppColor, pos);
+            break;
+        case 'k':
+            p = new King(oppColor, pos);
+            OppKing = p;
+            break;
+        // case 'p':
+        // p = new Pawn(oppColor, pos);
+        // break;
+        default:
+            break;
+        }
+        if (c != ' ') {
+            OppPieces.append(p);
+            putPiece(p, pos);
+        }
+    }
 
     state = checkGameState();
 }
 
 void Engine::endGame() {
     std::fill_n(board, 64, nullptr);
-    for (int i = 0; i < WhitePieces.length(); i++) {
-        delete WhitePieces.at(i);
+    for (int i = 0; i < SelfPieces.length(); i++) {
+        delete SelfPieces.at(i);
     }
-    WhitePieces.clear();
-    for (int i = 0; i < BlackPieces.length(); i++) {
-        delete BlackPieces.at(i);
+    SelfPieces.clear();
+    for (int i = 0; i < OppPieces.length(); i++) {
+        delete OppPieces.at(i);
     }
-    BlackPieces.clear();
-    for (int i = 0; i < WhiteDeadPieces.length(); i++) {
-        delete WhiteDeadPieces.at(i);
+    OppPieces.clear();
+    for (int i = 0; i < SelfDeadPieces.length(); i++) {
+        delete SelfDeadPieces.at(i);
     }
-    WhiteDeadPieces.clear();
-    for (int i = 0; i < BlackDeadPieces.length(); i++) {
-        delete BlackDeadPieces.at(i);
+    SelfDeadPieces.clear();
+    for (int i = 0; i < OppDeadPieces.length(); i++) {
+        delete OppDeadPieces.at(i);
     }
-    BlackDeadPieces.clear();
-    WhiteKing = nullptr;
-    BlackKing = nullptr;
+    OppDeadPieces.clear();
+    SelfKing = nullptr;
+    OppKing = nullptr;
 }
 
 GameState Engine::getGameState() {
@@ -76,24 +125,24 @@ GameState Engine::getGameState() {
 }
 
 GameState Engine::checkGameState() {
-    // 检测白棋
+    // 检测己方
     // King没有逃路且只剩King了
-    if (getPossibleMove(WhiteKing->getPos()).isEmpty() and WhitePieces.length() == 1) {
+    if (getPossibleMove(SelfKing->getPos()).isEmpty() and SelfPieces.length() == 1) {
         // King被将，Lose
-        if (hasPressure(WhiteKing->getPos(), Piece_Color::Black)) // 其实不可能大于1
-            state = GameState::BlackWin;
+        if (hasPressure(SelfKing->getPos(), flipPieceColor(selfColor))) // 其实不可能大于1
+            state = GameState::Lose;
 
         // King没被将，Draw
         else
             state = GameState::Draw;
     }
 
-    // 检测黑棋
+    // 检测对方
     // King没有逃路且只剩King了
-    else if (getPossibleMove(BlackKing->getPos()).isEmpty() and BlackPieces.length() == 1) {
+    else if (getPossibleMove(OppKing->getPos()).isEmpty() and OppPieces.length() == 1) {
         // King被将，Lose
-        if (hasPressure(BlackKing->getPos(), Piece_Color::White)) // 其实不可能大于1
-            state = GameState::WhiteWin;
+        if (hasPressure(OppKing->getPos(), selfColor)) // 其实不可能大于1
+            state = GameState::Win;
 
         // King没被将，Draw
         else
@@ -122,12 +171,12 @@ void Engine::movePiece(Position pos_from, Position pos_to) {
     board[convertPosToIndex(pos_from)] = nullptr;
     // 吃子
     if (p_to != nullptr) {
-        if (p_to->getColor() == Piece_Color::White) {
-            WhitePieces.removeOne(p_to);
-            WhiteDeadPieces.append(p_to);
+        if (p_to->getColor() == selfColor) {
+            SelfPieces.removeOne(p_to);
+            SelfDeadPieces.append(p_to);
         } else {
-            BlackPieces.removeOne(p_to);
-            BlackDeadPieces.append(p_to);
+            OppPieces.removeOne(p_to);
+            OppDeadPieces.append(p_to);
         }
     }
     putPiece(p_from, pos_to);
@@ -158,7 +207,7 @@ QList<Position> Engine::getBasicFilteredPos(Piece *p) {
     // Rook、Bishop、Queen 不能跨越到其他棋子后方 （**对方的王除外，因为将军的时候对方的王必须逃走**）
     // 横竖斜未被遮挡的区域，最后的位置包括对方的（可以吃的），也包括己方的（看着的）
     QList<Position> l = p->getPossibleMove();
-    Piece_Color selfColor = p->getColor();
+    Piece_Color pieceColor = p->getColor();
     Position pos = p->getPos();
 
     QList<Position> l_copy = l;
@@ -172,6 +221,9 @@ QList<Position> Engine::getBasicFilteredPos(Piece *p) {
         for (int j = 0; j < 3; j++) {
             int y_offset = offset[j];
 
+            if (x_offset == 0 and y_offset == 0)
+                continue;
+
             for (int x = pos.x + x_offset, y = pos.y + y_offset; true; x += x_offset, y += y_offset) {
                 Position pos_check{x, y};
                 if (!l_copy.contains(pos_check))
@@ -180,7 +232,7 @@ QList<Position> Engine::getBasicFilteredPos(Piece *p) {
                 Piece *p = getPiece(pos_check);
                 if (p) {
                     // 遇到己方的，加上这个位置，退出这个方向
-                    if (p->getColor() == selfColor) {
+                    if (p->getColor() == pieceColor) {
                         l.append(pos_check);
                         break;
                     } else {
@@ -206,12 +258,7 @@ QList<Position> Engine::getBasicFilteredPos(Piece *p) {
 
 QList<Position> Engine::getStrictFilteredPos(Piece *p) {
     QList<Position> l = getBasicFilteredPos(p);
-
-    Piece_Color selfColor = p->getColor();
-    // TODO filter with board
-    // - 被将军时其他兵唯一的自保行为
-    // - Pawn是否可斜吃
-    // - Pawn En passant
+    Piece_Color pieceColor = p->getColor();
 
     // 不能走到己方的棋子上
     QList<Position> l_copy = l;
@@ -219,12 +266,17 @@ QList<Position> Engine::getStrictFilteredPos(Piece *p) {
     foreach (Position pos, l_copy) {
         Piece *p = getPiece(pos);
         if (p) {
-            if (p->getColor() != selfColor)
+            if (p->getColor() != pieceColor)
                 l.append(pos);
         } else {
             l.append(pos);
         }
     }
+
+    // TODO filter with board
+    // - 被将军时其他兵唯一的自保行为
+    // - Pawn是否可斜吃
+    // - Pawn En passant
 
     // 如果是King，则不能走向对方的势力范围
     if (p->getType() == Piece_Type::King) {
@@ -261,10 +313,10 @@ void Engine::putPiece(Piece *p, Position pos) {
  */
 int Engine::caclPressure(Position pos, Piece_Color color) {
     QList<Piece *> l;
-    if (color == Piece_Color::White)
-        l = WhitePieces;
+    if (color == selfColor)
+        l = SelfPieces;
     else
-        l = BlackPieces;
+        l = OppPieces;
 
     int pressure = 0;
     foreach (Piece *p, l) {
@@ -286,10 +338,10 @@ int Engine::caclPressure(Position pos, Piece_Color color) {
  */
 bool Engine::hasPressure(Position pos, Piece_Color color) {
     QList<Piece *> l;
-    if (color == Piece_Color::White)
-        l = WhitePieces;
+    if (color == selfColor)
+        l = SelfPieces;
     else
-        l = BlackPieces;
+        l = OppPieces;
 
     bool flag = false;
     foreach (Piece *p, l) {

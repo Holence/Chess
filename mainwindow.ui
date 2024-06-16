@@ -52,6 +52,9 @@
    <property name="toolTip">
     <string>New Single Player Game</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
+   </property>
   </action>
   <action name="actionResign">
    <property name="text">

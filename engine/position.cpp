@@ -7,3 +7,7 @@ bool isValidPos(Position pos) {
 int convertPosToIndex(Position pos) {
     return pos.x - 1 + (pos.y - 1) * 8;
 }
+
+Position convertIndexToPos(int index) {
+    return Position{(index % 8) + 1, (index / 8) + 1};
+}

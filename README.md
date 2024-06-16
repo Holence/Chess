@@ -28,7 +28,8 @@ TODO:
 - GameState: WhiteWin / BlackWin / WhiteCheckmated / BlackCheckmated / Draw / Unfinished
 
 - `QList<Piece *> White/BlackPieces、White/BlackDeadPieces`: 记录场上的棋子、吃掉的棋子
-- White/Black King Position: check whether game is over
+- `Piece* White/BlackKing`: 方便每次move后检查state
+- `Position LastPawnLongMove`: 如果上一次是对方的Pawn走了两格，且贴着己方的Pawn，则己方的Pawn可以En passant
 
 ```c++
 // "to" is definitively the valid Position (unless hacked😅)
@@ -47,6 +48,8 @@ QList<Position> getPossibleMove(Position pos){
     // - 可以走到对方棋子上，不能走到自己棋子上
     // - King不能走向对方的势力范围
     // - 被将军时其他兵唯一的自保行为
+    // - Pawn是否可斜吃
+    // - Pawn是否可En passant
 }
 
 void movePiece(Position from, Position to){
@@ -62,7 +65,6 @@ void movePiece(Position from, Position to){
 
 ```c++
 // 每种兵的基础走法 返回棋盘范围内所有可能的落点
-// - Pawn的En passant
 // - King的Castling
 QList<Position> getPossibleMove(board, pos);
 ```

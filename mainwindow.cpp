@@ -10,6 +10,14 @@ MainWindow::MainWindow(QWidget *parent)
     BlackIcon[Piece_Type::King] = ":/img/bk.png";
     WhiteIcon[Piece_Type::Rook] = ":/img/wr.png";
     BlackIcon[Piece_Type::Rook] = ":/img/br.png";
+    WhiteIcon[Piece_Type::Queen] = ":/img/wq.png";
+    BlackIcon[Piece_Type::Queen] = ":/img/bq.png";
+    WhiteIcon[Piece_Type::Knight] = ":/img/wn.png";
+    BlackIcon[Piece_Type::Knight] = ":/img/bn.png";
+    WhiteIcon[Piece_Type::Bishop] = ":/img/wb.png";
+    BlackIcon[Piece_Type::Bishop] = ":/img/bb.png";
+    WhiteIcon[Piece_Type::Pawn] = ":/img/wp.png";
+    BlackIcon[Piece_Type::Pawn] = ":/img/bp.png";
 
     // draw board
     ui->widgetBoard->setFixedSize(QSize(800, 800));
@@ -51,16 +59,16 @@ MainWindow::~MainWindow() {
 }
 
 void MainWindow::SinglePlayerGame() {
-    engine.newGame();
+    // TODO select color box
+    selfColor = Piece_Color::White;
+    engine.newGame(selfColor);
+
     drawBoard();
 
     selectedCell = nullptr;
 
     // 单人游戏 移动棋子后更换selfColor
     connect(this, &MainWindow::pieceMoved, this, [this] { selfColor = flipPieceColor(selfColor); });
-
-    // TODO select color box
-    selfColor = Piece_Color::White;
 
     ui->actionSingle_New_Game->setDisabled(true);
     ui->actionResign->setDisabled(false);
@@ -70,27 +78,18 @@ void MainWindow::SinglePlayerGame() {
 void MainWindow::GameOver() {
     QString s;
     switch (engine.getGameState()) {
-    case GameState::WhiteWin:
-        s = QString("White Wins");
+    case GameState::Win:
+        s = QString("You Win");
         break;
-    case GameState::BlackWin:
-        s = QString("Black Wins");
+    case GameState::Lose:
+        s = QString("You Lose");
         break;
     case GameState::Draw:
         s = QString("Draw");
         break;
     // Resign
     default:
-        switch (selfColor) {
-        case Piece_Color::White:
-            s = QString("Black Wins");
-            break;
-        case Piece_Color::Black:
-            s = QString("White Wins");
-            break;
-        default:
-            break;
-        }
+        s = QString("Resigned");
     }
     engine.endGame();
     cellCanceled();
@@ -123,7 +122,7 @@ void MainWindow::cellSelected(Position pos) {
 
             emit pieceMoved();
             cellCanceled();
-            if (state == GameState::WhiteWin or state == GameState::BlackWin or state == GameState::Draw) {
+            if (state == GameState::Win or state == GameState::Lose or state == GameState::Draw) {
                 emit gameEnded();
             }
         } else {

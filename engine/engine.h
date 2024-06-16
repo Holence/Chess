@@ -7,8 +7,8 @@
 #define Cell Piece *
 
 enum class GameState {
-    WhiteWin,
-    BlackWin,
+    Win,
+    Lose,
     Draw,
     Unfinished
 };
@@ -23,23 +23,24 @@ public:
     QList<Position> getPossibleMove(Position pos);
     Piece *getPiece(Position pos);
 
-    void newGame();
+    void newGame(Piece_Color selfColor);
     void endGame();
 
     GameState getGameState();
 
 private:
+    Piece_Color selfColor;
     GameState state;
     GameState checkGameState();
 
     Cell *board; // board是指向Cell array的指针
-    QList<Piece *> WhitePieces;
-    QList<Piece *> WhiteDeadPieces;
-    QList<Piece *> BlackPieces;
-    QList<Piece *> BlackDeadPieces;
+    QList<Piece *> SelfPieces;
+    QList<Piece *> SelfDeadPieces;
+    QList<Piece *> OppPieces;
+    QList<Piece *> OppDeadPieces;
 
-    Piece *WhiteKing;
-    Piece *BlackKing;
+    Piece *SelfKing;
+    Piece *OppKing;
 
     void putPiece(Piece *p, Position pos);
     void movePiece(Position from, Position to);
