@@ -1,0 +1,12 @@
+#ifndef BISHOP_H
+#define BISHOP_H
+
+#include "piece.h"
+
+class Bishop : public Piece {
+public:
+    Bishop(Piece_Color color, Position pos);
+    QList<Position> getBasicMove();
+};
+
+#endif // BISHOP_H

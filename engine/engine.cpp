@@ -1,11 +1,13 @@
 #include "engine.h"
+#include "bishop.h"
 #include "king.h"
+#include "knight.h"
 #include "queen.h"
 #include "rook.h"
 #include <QDebug>
 
 char blackAtBottom[] = "r  kq  r        ";
-char whiteAtBottom[] = "r  q k r        ";
+char whiteAtBottom[] = "rnbqbknr        ";
 
 // char ImWhite[] = "rnbqkbnrpppppppp";
 
@@ -41,12 +43,12 @@ void Engine::placePiece(Piece_Color color, char *posCode, QList<Piece *> &Pieces
         case 'r':
             p = new Rook(color, pos);
             break;
-        // case 'n':
-        //     p = new Knight(color, pos);
-        //     break;
-        // case 'b':
-        // p = new Bishop(color, pos);
-        // break;
+        case 'n':
+            p = new Knight(color, pos);
+            break;
+        case 'b':
+            p = new Bishop(color, pos);
+            break;
         case 'q':
             p = new Queen(color, pos);
             break;
@@ -161,7 +163,10 @@ QList<Position> Engine::getSuppressingPos(Piece *p) {
     Piece_Color pieceColor = p->getColor();
     Position pos = p->getPos();
 
-    // TODO Knight
+    // Knight🐎是不可阻挡的！！
+    if (p->getType() == Piece_Type::Knight) {
+        return l;
+    }
 
     // Rook、Bishop、Queen 不能跨越到其他棋子后方 （**对方的王除外，因为将军的时候对方的王必须逃走**）
     // 也包括横竖斜未被遮挡的区域，最后的位置包括对方的子（可以吃的），也包括己方的子（看着的）
