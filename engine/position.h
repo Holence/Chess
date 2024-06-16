@@ -23,5 +23,7 @@ struct Position {
 bool isValidPos(Position pos);
 int convertPosToIndex(Position pos);
 Position convertIndexToPos(int index);
+Position convertIndexToPosFlip(int index);
+Position flipSide(Position pos);
 
 #endif // POSITION_H

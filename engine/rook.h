@@ -6,7 +6,7 @@
 class Rook : public Piece {
 public:
     Rook(Piece_Color color, Position pos);
-    QList<Position> getPossibleMove();
+    QList<Position> getBasicMove();
 };
 
 #endif // ROOK_H

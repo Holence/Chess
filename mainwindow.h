@@ -43,6 +43,9 @@ private:
     CellButton *getCell(Position pos);
 
     CellButton *selectedCell;
-    QList<CellButton *> highlightCellList;
+    QList<CellButton *> movableCellList;
+    QList<CellButton *> filteredCellList;
+
+    void showBasicFilter();
 };
 #endif // MAINWINDOW_H

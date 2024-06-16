@@ -17,7 +17,7 @@ enum class Piece_Color { White,
 class Piece {
 public:
     Piece(Piece_Color color, Position pos);
-    virtual QList<Position> getPossibleMove() = 0;
+    virtual QList<Position> getBasicMove() = 0;
     virtual ~Piece() = default;
     Piece_Color getColor();
     Piece_Type getType();

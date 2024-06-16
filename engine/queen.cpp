@@ -4,7 +4,7 @@ Queen::Queen(Piece_Color color, Position pos) : Piece(color, pos) {
     type = Piece_Type::Queen;
 }
 
-QList<Position> Queen::getPossibleMove() {
+QList<Position> Queen::getBasicMove() {
     QList<Position> l;
 
     int offset[3] = {-1, 0, 1};

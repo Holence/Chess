@@ -44,6 +44,8 @@ MainWindow::MainWindow(QWidget *parent)
         }
     }
 
+    connect(ui->actionBasicFilter, &QAction::triggered, this, &MainWindow::showBasicFilter);
+
     connect(ui->actionSingle_New_Game, &QAction::triggered, this, &MainWindow::SinglePlayerGame);
     connect(ui->actionResign, &QAction::triggered, this, &MainWindow::GameOver);
     connect(this, &MainWindow::gameEnded, this, &MainWindow::GameOver);
@@ -77,18 +79,25 @@ void MainWindow::SinglePlayerGame() {
 
 void MainWindow::GameOver() {
     QString s;
+
     switch (engine.getGameState()) {
-    case GameState::Win:
-        s = QString("You Win");
+    case GameState::WhiteWin:
+        if (selfColor == Piece_Color::White)
+            s = QString("You Win");
+        else
+            s = QString("You Lose");
         break;
-    case GameState::Lose:
-        s = QString("You Lose");
+    case GameState::BlackWin:
+        if (selfColor == Piece_Color::Black)
+            s = QString("You Win");
+        else
+            s = QString("You Lose");
         break;
     case GameState::Draw:
         s = QString("Draw");
         break;
-    // Resign
     default:
+        // Resign
         s = QString("Resigned");
     }
     engine.endGame();
@@ -114,7 +123,7 @@ void MainWindow::cellSelected(Position pos) {
     // 之前有选中有效的棋子
     if (selectedCell) {
         // 如果当前点的是可行的走位，则移动棋子
-        if (highlightCellList.contains(current_select_btn)) {
+        if (movableCellList.contains(current_select_btn)) {
             Position orig_pos = selectedCell->getPos();
             GameState state = engine.nextGameState(orig_pos, pos);
             updateCellIcon(orig_pos);
@@ -122,7 +131,7 @@ void MainWindow::cellSelected(Position pos) {
 
             emit pieceMoved();
             cellCanceled();
-            if (state == GameState::Win or state == GameState::Lose or state == GameState::Draw) {
+            if (state == GameState::WhiteWin or state == GameState::BlackWin or state == GameState::Draw) {
                 emit gameEnded();
             }
         } else {
@@ -145,7 +154,7 @@ void MainWindow::cellSelected(Position pos) {
                     // 标为黄色
                     CellButton *btn = getCell(pos);
                     btn->setStyleSheet("background-color: rgba(255,255,0,63);");
-                    highlightCellList.append(btn);
+                    movableCellList.append(btn);
                 }
             }
         }
@@ -154,10 +163,14 @@ void MainWindow::cellSelected(Position pos) {
 
 void MainWindow::cellCanceled() {
     if (selectedCell) {
-        foreach (CellButton *btn, highlightCellList) {
+        foreach (CellButton *btn, movableCellList) {
             btn->setStyleSheet("background-color: rgba(0,0,0,0);");
         }
-        highlightCellList.clear();
+        movableCellList.clear();
+        foreach (CellButton *btn, filteredCellList) {
+            btn->setStyleSheet("background-color: rgba(0,0,0,0);");
+        }
+        filteredCellList.clear();
         selectedCell = nullptr;
     }
 }
@@ -177,6 +190,17 @@ void MainWindow::updateCellIcon(Position pos) {
 
 CellButton *MainWindow::getCell(Position pos) {
     return board[convertPosToIndex(pos)];
+}
+
+void MainWindow::showBasicFilter() {
+    if (selectedCell) {
+        QList<Position> l = engine.getBasicFilteredMove(selectedCell->getPos());
+        foreach (Position pos, l) {
+            CellButton *btn = getCell(pos);
+            btn->setStyleSheet("background-color: rgba(255,0,255,63);");
+            filteredCellList.append(btn);
+        }
+    }
 }
 
 /**

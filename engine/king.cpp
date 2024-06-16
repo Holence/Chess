@@ -4,7 +4,7 @@ King::King(Piece_Color color, Position pos) : Piece(color, pos) {
     type = Piece_Type::King;
 }
 
-QList<Position> King::getPossibleMove() {
+QList<Position> King::getBasicMove() {
     QList<Position> l;
     for (int i = -1; i <= 1; i++) {
         for (int j = -1; j <= 1; j++) {

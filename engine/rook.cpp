@@ -4,7 +4,7 @@ Rook::Rook(Piece_Color color, Position pos) : Piece(color, pos) {
     type = Piece_Type::Rook;
 }
 
-QList<Position> Rook::getPossibleMove() {
+QList<Position> Rook::getBasicMove() {
     QList<Position> l;
     for (int x = pos.x - 1; x >= 1; x--) {
         Position p{x, pos.y};
