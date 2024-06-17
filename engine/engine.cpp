@@ -5,10 +5,17 @@
 #include "pawn.h"
 #include "queen.h"
 #include "rook.h"
-#include <QDebug>
 
-char blackAtBottom[] = "rnbkqbnrpppppppp";
-char whiteAtBottom[] = "rnbqkbnrpppppppp";
+// 白棋大写，黑棋小写，白下黑上
+char chessBoardCode[] =
+    "rnbkqbnr"
+    "pppppppp"
+    "........"
+    "........"
+    "........"
+    "........"
+    "PPPPPPPP"
+    "RNBQKBNR";
 
 Engine::Engine() {
 }
@@ -21,68 +28,65 @@ void Engine::newGame() {
 
     board = new Cell[64]{nullptr};
 
-    placePiece(Piece_Color::White, false);
-    placePiece(Piece_Color::Black, true);
-
-    state = checkGameState();
-}
-
-void Engine::placePiece(Piece_Color color, bool reversed) {
-
+    Piece_Color color;
     QList<Piece *> *PiecesList;
     Piece **king;
-    char *posCode;
-    if (color == Piece_Color::White) {
-        PiecesList = &WhitePieces;
-        king = &WhiteKing;
-        posCode = whiteAtBottom;
-    } else {
-        PiecesList = &BlackPieces;
-        king = &BlackKing;
-        posCode = blackAtBottom;
-    }
-
-    Position (*posFunc)(int);
     Pawn::Direction direction;
-    if (!reversed) {
-        posFunc = convertIndexToPos;
-        direction = Pawn::Direction::Up;
-    } else {
-        posFunc = convertIndexToPosFlip;
-        direction = Pawn::Direction::Down;
-    }
-
     Position pos;
     Piece *p;
-    for (int i = 0; i < 16; i++) {
-        char c = posCode[i];
-        pos = posFunc(i);
-        switch (c) {
-        case 'r':
-            p = new Rook(color, pos);
-            break;
-        case 'n':
-            p = new Knight(color, pos);
-            break;
-        case 'b':
-            p = new Bishop(color, pos);
-            break;
-        case 'q':
-            p = new Queen(color, pos);
-            break;
-        case 'k':
-            p = new King(color, pos);
-            *king = p;
-            break;
-        case 'p':
-            p = new Pawn(color, pos, direction);
-            break;
-        default:
-            break;
+    int index = -1;
+    // chessBoardCode的字符串顺序不能从头读到尾，得分片读
+    // 为了支持自定义开局状态，这里多了这么多判断和赋值，简直就是简直，卑鄙的浪费啊……
+    for (int i = 56; i >= 0; i -= 8) {
+        for (int j = 0; j < 8; j++) {
+            index++;
+            char c = chessBoardCode[i + j];
+            if (c == '.')
+                continue;
+
+            pos = convertIndexToPos(index);
+            if (std::isupper(c)) {
+                c = std::tolower(c);
+                color = Piece_Color::White;
+                PiecesList = &WhitePieces;
+                king = &WhiteKing;
+                direction = Pawn::Direction::Up;
+            } else {
+                color = Piece_Color::Black;
+                PiecesList = &BlackPieces;
+                king = &BlackKing;
+                direction = Pawn::Direction::Down;
+            }
+            switch (c) {
+            case 'r':
+                p = new Rook(color, pos);
+                break;
+            case 'n':
+                p = new Knight(color, pos);
+                break;
+            case 'b':
+                p = new Bishop(color, pos);
+                break;
+            case 'q':
+                p = new Queen(color, pos);
+                break;
+            case 'k':
+                p = new King(color, pos);
+                *king = p;
+                break;
+            case 'p':
+                p = new Pawn(color, pos, direction);
+                break;
+            default:
+                break;
+            }
+
+            (*PiecesList).append(p);
+            putPiece(p, pos);
         }
-        (*PiecesList).append(p);
-        putPiece(p, pos);
     }
+
+    state = checkGameState();
 }
 
 void Engine::endGame() {
@@ -174,15 +178,16 @@ GameState Engine::checkGameState() {
  * @param p
  * @return
  */
-QList<Position> Engine::getSuppressingPos(Piece *p) {
+QList<Position> Engine::getAttackingPos(Piece *p) {
     QList<Position> l = p->getAttackMove();
-    Piece_Color pieceColor = p->getColor();
-    Position pos = p->getPos();
 
     // Knight🐎是不可阻挡的！！
     if (p->getType() == Piece_Type::Knight) {
         return l;
     }
+
+    Piece_Color pieceColor = p->getColor();
+    Position piecePos = p->getPos();
 
     // Rook、Bishop、Queen 不能跨越到其他棋子后方 （**对方的王除外，因为将军的时候对方的王必须逃走**）
     // 也包括横竖斜未被遮挡的区域，最后的位置包括对方的子（可以吃的），也包括己方的子（看着的）
@@ -200,21 +205,21 @@ QList<Position> Engine::getSuppressingPos(Piece *p) {
             if (x_offset == 0 and y_offset == 0)
                 continue;
 
-            for (int x = pos.x + x_offset, y = pos.y + y_offset; true; x += x_offset, y += y_offset) {
+            for (int x = piecePos.x + x_offset, y = piecePos.y + y_offset; true; x += x_offset, y += y_offset) {
                 Position pos_check{x, y};
                 if (!l_copy.contains(pos_check))
                     break;
 
-                Piece *p = getPiece(pos_check);
-                if (p) {
+                Piece *p_check = getPiece(pos_check);
+                if (p_check) {
                     // 遇到己方的，加上这个位置，退出这个方向
-                    if (p->getColor() == pieceColor) {
+                    if (p_check->getColor() == pieceColor) {
                         l.append(pos_check);
                         break;
                     } else {
                         // 遇到对方的，加上这个位置
                         l.append(pos_check);
-                        if (p->getType() == Piece_Type::King)
+                        if (p_check->getType() == Piece_Type::King)
                             // 如果是对方的King，则后方也是势力范围
                             continue;
                         else
@@ -238,7 +243,7 @@ QList<Position> Engine::getSuppressingPos(Piece *p) {
  * @return
  */
 QList<Position> Engine::getMovablePos(Piece *p) {
-    QList<Position> l = getSuppressingPos(p);
+    QList<Position> l = getAttackingPos(p);
 
     Piece_Color pieceColor = p->getColor();
     Position piecePos = p->getPos();
@@ -316,13 +321,18 @@ QList<Position> Engine::getMovablePos(Piece *p) {
             // 模拟走出一步
             Piece *p_to = getPiece(pos_to);
 
+            // ----------------Pawn----------------
+            // 模拟En Passant
             if (p_from->getType() == Piece_Type::Pawn) {
                 // 作为Pawn，还能斜着走到空的位置，说明p_to一定是EnPassantPawn
                 if (pos_from.x != pos_to.x and p_to == nullptr) {
                     p_to = EnPassantPawn;
                 }
             }
+            // Pawn在对方底线其实也就是 向前走挡住横向的将军 和 斜吃，Promotion的选择并不会额外影响老王的安全
+            // ------------------------------------
 
+            // 清除起始位置
             clearPos(pos_from);
             // 吃子
             if (p_to != nullptr) {
@@ -330,6 +340,7 @@ QList<Position> Engine::getMovablePos(Piece *p) {
                 index = (*OppPieces).indexOf(p_to); // 用indexOf、insert保证顺序不变
                 (*OppPieces).removeAt(index);
             }
+            // 移动到终点位置
             putPiece(p_from, pos_to);
 
             // 检测老王是否安全
@@ -363,19 +374,19 @@ QList<Position> Engine::getPossibleMove(Position pos) {
 QList<Position> Engine::getBasicFilteredMove(Position pos) {
     Piece *p = getPiece(pos);
     if (p != nullptr) {
-        return getSuppressingPos(p);
+        return getAttackingPos(p);
     } else {
         return QList<Position>();
     }
 }
 
-GameState Engine::nextGameState(Position from, Position to) {
-    movePiece(from, to);
+GameState Engine::nextGameState(Position from, Position to, Piece_Type promoteType) {
+    movePiece(from, to, promoteType);
     state = checkGameState();
     return state;
 }
 
-void Engine::movePiece(Position pos_from, Position pos_to) {
+void Engine::movePiece(Position pos_from, Position pos_to, Piece_Type promoteType) {
 
     Piece *p_from = getPiece(pos_from);
     Piece *p_to = getPiece(pos_to);
@@ -396,12 +407,48 @@ void Engine::movePiece(Position pos_from, Position pos_to) {
         } else {
             EnPassantPawn = nullptr;
         }
+
+        // 如果有promotion
+        if (promoteType != Piece_Type::Null) {
+            Piece_Color color = p_from->getColor();
+
+            QList<Piece *> *l;
+            if (color == Piece_Color::White)
+                l = &WhitePieces;
+            else
+                l = &BlackPieces;
+
+            // 删除Pawn
+            (*l).removeOne(p_from);
+            delete p_from;
+
+            // 变身为新Piece
+            switch (promoteType) {
+            case Piece_Type::Rook:
+                p_from = new Rook(color, pos_from);
+                break;
+            case Piece_Type::Knight:
+                p_from = new Knight(color, pos_from);
+                break;
+            case Piece_Type::Bishop:
+                p_from = new Bishop(color, pos_from);
+                break;
+            case Piece_Type::Queen:
+                p_from = new Queen(color, pos_from);
+                break;
+            default:
+                break;
+            }
+            (*l).append(p_from);
+        }
     } else {
         EnPassantPawn = nullptr;
     }
     // ------------------------------------
 
+    // 清除起始位置
     clearPos(pos_from);
+
     // 吃子
     if (p_to != nullptr) {
         clearPos(p_to->getPos()); // 这里要重新获取p_to的pos，因为可能是EnPassantPawn
@@ -413,6 +460,8 @@ void Engine::movePiece(Position pos_from, Position pos_to) {
             BlackDeadPieces.append(p_to);
         }
     }
+
+    // 移动到终点位置
     putPiece(p_from, pos_to);
 }
 
@@ -449,7 +498,7 @@ int Engine::caclPressure(Position pos, Piece_Color color) {
 
     int pressure = 0;
     foreach (Piece *p, l) {
-        if (getSuppressingPos(p).contains(pos)) {
+        if (getAttackingPos(p).contains(pos)) {
             pressure++;
         }
     }
@@ -474,7 +523,7 @@ bool Engine::hasPressure(Position pos, Piece_Color color) {
 
     bool flag = false;
     foreach (Piece *p, l) {
-        if (getSuppressingPos(p).contains(pos)) {
+        if (getAttackingPos(p).contains(pos)) {
             flag = true;
             break;
         }

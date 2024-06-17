@@ -9,7 +9,8 @@ enum class Piece_Type { Pawn,
                         Queen,
                         Rook,
                         Bishop,
-                        Knight };
+                        Knight,
+                        Null };
 
 enum class Piece_Color { White,
                          Black };

@@ -19,7 +19,7 @@ public:
     Engine();
     ~Engine();
 
-    GameState nextGameState(Position from, Position to);
+    GameState nextGameState(Position from, Position to, Piece_Type promoteType);
 
     QList<Position> getPossibleMove(Position pos);
     QList<Position> getBasicFilteredMove(Position pos);
@@ -46,13 +46,13 @@ private:
     void placePiece(Piece_Color color, bool reversed);
     void putPiece(Piece *p, Position pos);
     void clearPos(Position pos);
-    void movePiece(Position from, Position to);
+    void movePiece(Position from, Position to, Piece_Type promoteType);
 
     int caclPressure(Position pos, Piece_Color color);
     bool hasPressure(Position pos, Piece_Color color);
     bool isBeingCheckmated(Piece_Color color);
 
-    QList<Position> getSuppressingPos(Piece *p);
+    QList<Position> getAttackingPos(Piece *p);
     QList<Position> getMovablePos(Piece *p);
 
     Pawn *EnPassantPawn; // 之前一个State时（对手）前进两格的Pawn的Position

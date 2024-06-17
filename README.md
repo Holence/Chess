@@ -32,7 +32,7 @@ Frontend负责管理黑白双方的回合轮转，棋盘的翻转显示，需要
 
 定义：
 
-对方的势力范围：King不能走进、需要逃离的区域（包括被横竖斜着将军时的身后位），见`Engine::getSuppressingPos()`
+对方的势力范围：King不能走进、需要逃离的区域（包括被横竖斜着将军时的身后位），见`Engine::getAttackingPos()`
 
 被将军：King处于对方的势力范围内
 

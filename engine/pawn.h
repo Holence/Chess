@@ -13,6 +13,7 @@ public:
     QList<Position> getAttackMove();
     QList<Position> getAdditionMove();
     void setMoved();
+    bool isReadyToPromote();
 
 private:
     bool moved;

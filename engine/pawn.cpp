@@ -2,12 +2,15 @@
 
 Pawn::Pawn(Piece_Color color, Position pos, Direction direction) : Piece(color, pos) {
     type = Piece_Type::Pawn;
-    moved = false;
     this->direction = direction;
+    if (direction == Direction::Up) {
+        moved = pos.y != 2;
+    } else {
+        moved = pos.y != 7;
+    }
 }
 
 QList<Position> Pawn::getAttackMove() {
-    // 这里只给出斜吃，无奈Engine调用Piece->getAttackMove的地方只有getSuppressingPos()中，这里就狗皮膏药一下……
     QList<Position> l;
     Position p;
     p = Position{pos.x - 1, pos.y + 1 * direction};
@@ -35,4 +38,12 @@ QList<Position> Pawn::getAdditionMove() {
 
 void Pawn::setMoved() {
     moved = true;
+}
+
+bool Pawn::isReadyToPromote() {
+    if (direction == Direction::Up) {
+        return pos.y == 7;
+    } else {
+        return pos.y == 2;
+    }
 }

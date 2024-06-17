@@ -10,6 +10,8 @@ class CellButton : public QPushButton {
 public:
     CellButton(Position pos);
     Position getPos();
+    void paintColor(int r, int g, int b, int a);
+    void clearColor();
 
 signals:
     void rightClicked();

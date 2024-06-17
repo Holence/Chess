@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include <QHBoxLayout>
 #include <QMessageBox>
 
 MainWindow::MainWindow(QWidget *parent)
@@ -22,8 +23,7 @@ MainWindow::MainWindow(QWidget *parent)
     // draw board
     ui->widgetBoard->setFixedSize(QSize(800, 800));
     ui->widgetBoard->setStyleSheet(
-        "#widgetBoard {border-image: url(:/img/bg.png) 0 0 0 0 stretch stretch;}"
-        "CellButton {background-color: rgba(0,0,0,0);}");
+        "#widgetBoard {border-image: url(:/img/bg.png) 0 0 0 0 stretch stretch;}");
     QGridLayout *grid = new QGridLayout(ui->widgetBoard);
     grid->setMargin(0);
     grid->setSpacing(0);
@@ -35,8 +35,6 @@ MainWindow::MainWindow(QWidget *parent)
         for (int y = 1; y <= 8; y++) {
             Position pos{x, y};
             CellButton *btn = new CellButton(pos);
-            btn->setIconSize(QSize(100, 100));
-            btn->setFixedSize(QSize(100, 100));
             connect(btn, &CellButton::leftClicked, this, &MainWindow::cellSelected);
             connect(btn, &CellButton::rightClicked, this, &MainWindow::cellCanceled);
             grid->addWidget(btn, 8 - y, x - 1);
@@ -47,10 +45,10 @@ MainWindow::MainWindow(QWidget *parent)
     // Filter
     connect(ui->actionBasicFilter, &QAction::triggered, this, [this] {
         if (selectedCell) {
-            QList<Position> l = engine.getBasicFilteredMove(translatePos(selectedCell->getPos()));
+            QList<Position> l = translatePosList(engine.getBasicFilteredMove(translatePos(selectedCell->getPos())));
             foreach (Position pos, l) {
                 CellButton *btn = getCellBtn(pos);
-                btn->setStyleSheet("background-color: rgba(255,0,255,63);");
+                btn->paintColor(255, 0, 255, 63);
                 filteredCellList.append(btn);
             }
         }
@@ -80,7 +78,7 @@ MainWindow::~MainWindow() {
 void MainWindow::SinglePlayerGame() {
     // TODO select color box
     selfColor = Piece_Color::White;
-    boardFilpped = true;
+    boardFilpped = false;
     engine.newGame();
 
     drawBoard();
@@ -141,12 +139,19 @@ void MainWindow::cellSelected(Position pos) {
     // 之前有选中有效的棋子
     if (selectedCell) {
         // 如果当前点的是可行的走位，则移动棋子
-        // TODO Pawn Promotion Menu
 
         if (movableCellList.contains(current_select_btn)) {
             Position orig_pos = selectedCell->getPos();
-            // TODO 改为标准化的字符串接口
-            GameState state = engine.nextGameState(translatePos(orig_pos), translatePos(pos));
+
+            GameState state;
+
+            // Pawn Promote
+            if (selectedPiece->getType() == Piece_Type::Pawn and ((Pawn *)selectedPiece)->isReadyToPromote()) {
+                state = engine.nextGameState(translatePos(orig_pos), translatePos(pos), getPawnPromotion());
+            } else {
+                state = engine.nextGameState(translatePos(orig_pos), translatePos(pos), Piece_Type::Null);
+            }
+
             updateCellIcon(orig_pos);
             updateCellIcon(pos);
 
@@ -167,10 +172,9 @@ void MainWindow::cellSelected(Position pos) {
     }
     //
     else {
-        Piece *p = engine.getPiece(translatePos(pos));
-        // TODO 存储Piece*，如果是Pawn，落子时就要判断是否要Promote
+        selectedPiece = engine.getPiece(translatePos(pos));
         // 如果选中棋子 且 选中了己方的棋子
-        if (p and p->getColor() == selfColor) {
+        if (selectedPiece and selectedPiece->getColor() == selfColor) {
             // 获取可行的走位
             QList<Position> l = translatePosList(engine.getPossibleMove(translatePos(pos)));
             if (l.isEmpty()) {
@@ -181,7 +185,7 @@ void MainWindow::cellSelected(Position pos) {
                 foreach (Position pos, l) {
                     // 标为黄色
                     CellButton *btn = getCellBtn(pos);
-                    btn->setStyleSheet("background-color: rgba(255,255,0,63);");
+                    btn->paintColor(255, 255, 0, 63);
                     movableCellList.append(btn);
                 }
             }
@@ -192,11 +196,11 @@ void MainWindow::cellSelected(Position pos) {
 void MainWindow::cellCanceled() {
     if (selectedCell) {
         foreach (CellButton *btn, movableCellList) {
-            btn->setStyleSheet("background-color: rgba(0,0,0,0);");
+            btn->clearColor();
         }
         movableCellList.clear();
         foreach (CellButton *btn, filteredCellList) {
-            btn->setStyleSheet("background-color: rgba(0,0,0,0);");
+            btn->clearColor();
         }
         filteredCellList.clear();
         selectedCell = nullptr;
@@ -207,9 +211,9 @@ void MainWindow::updateCellIcon(Position pos) {
     Piece *p = engine.getPiece(translatePos(pos));
     if (p) {
         if (p->getColor() == Piece_Color::White) {
-            getCellBtn(pos)->setIcon(QIcon(WhiteIcon.value(p->getType(), QString())));
+            getCellBtn(pos)->setIcon(QIcon(WhiteIcon.value(p->getType())));
         } else {
-            getCellBtn(pos)->setIcon(QIcon(BlackIcon.value(p->getType(), QString())));
+            getCellBtn(pos)->setIcon(QIcon(BlackIcon.value(p->getType())));
         }
     } else {
         getCellBtn(pos)->setIcon(QIcon(QString()));
@@ -220,6 +224,17 @@ CellButton *MainWindow::getCellBtn(Position pos) {
     return cellArray[convertPosToIndex(pos)];
 }
 
+/**
+ * 因为engine和client间通信的pos统一都是白下黑上的标准
+ *
+ * 所有涉及给engine发pos、从engine获取pos的操作
+ *
+ * 以及给对手client发pos、收取对手client的pos
+ *
+ * 都需要经过这个函数进行转义
+ * @param pos
+ * @return
+ */
 Position MainWindow::translatePos(Position pos) {
     if (!boardFilpped) {
         return pos;
@@ -228,12 +243,40 @@ Position MainWindow::translatePos(Position pos) {
     }
 }
 
+/**
+ * 同translatePos
+ * @param posList
+ * @return
+ */
 QList<Position> MainWindow::translatePosList(QList<Position> posList) {
     QList<Position> l;
     foreach (Position pos, posList) {
         l.append(translatePos(pos));
     }
     return l;
+}
+
+Piece_Type MainWindow::getPawnPromotion() {
+    QMap<Piece_Type, QString> *iconMap;
+    if (selectedPiece->getColor() == Piece_Color::White)
+        iconMap = &WhiteIcon;
+    else
+        iconMap = &BlackIcon;
+    QDialog dlg(this);
+    dlg.setStyleSheet("QPushButton{background-color: rgba(0,0,0,0);}");
+    QHBoxLayout layout;
+    Piece_Type typeArray[] = {Piece_Type::Queen, Piece_Type::Rook, Piece_Type::Knight, Piece_Type::Bishop};
+    for (int i = 0; i < 4; i++) {
+        QPushButton *b = new QPushButton(&dlg);
+        connect(b, &QPushButton::clicked, &dlg, [&, i] { dlg.done(i); });
+        b->setIconSize(QSize(100, 100));
+        b->setFixedSize(QSize(100, 100));
+        b->setIcon(QIcon(iconMap->value(typeArray[i])));
+        layout.addWidget(b);
+    }
+    dlg.setLayout(&layout);
+    int choose = dlg.exec();
+    return typeArray[choose];
 }
 
 /**

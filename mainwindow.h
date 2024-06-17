@@ -44,10 +44,13 @@ private:
     CellButton *getCellBtn(Position pos);
 
     CellButton *selectedCell;
+    Piece *selectedPiece;
     QList<CellButton *> movableCellList;
     QList<CellButton *> filteredCellList;
 
     Position translatePos(Position pos);
     QList<Position> translatePosList(QList<Position> posList);
+
+    Piece_Type getPawnPromotion();
 };
 #endif // MAINWINDOW_H

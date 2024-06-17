@@ -12,10 +12,6 @@ Position convertIndexToPos(int index) {
     return Position{(index % 8) + 1, (index / 8) + 1};
 }
 
-Position convertIndexToPosFlip(int index) {
-    return flipSide(convertIndexToPos(index));
-}
-
 Position flipSide(Position pos) {
     return Position{9 - pos.x, 9 - pos.y};
 }
