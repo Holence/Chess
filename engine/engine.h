@@ -32,7 +32,7 @@ public:
 
 private:
     GameState state;
-    GameState checkGameState();
+    void checkGameState(Piece_Color color);
 
     Cell *board; // board是指向Cell array的指针
     QList<Piece *> WhitePieces;

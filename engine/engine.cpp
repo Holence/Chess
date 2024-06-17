@@ -86,7 +86,8 @@ void Engine::newGame() {
         }
     }
 
-    state = checkGameState();
+    // 白棋先走，意味着“之前”是黑棋下的
+    checkGameState(Piece_Color::Black);
 }
 
 void Engine::endGame() {
@@ -115,60 +116,49 @@ GameState Engine::getGameState() {
     return state;
 }
 
-GameState Engine::checkGameState() {
-    // 如果没有棋能动
-    //    如果被将，则输了
-    //    如果没被将，则平局
-    // 如果有棋能动，则继续
+/**
+ * color颜色的一方走一步后，来检查游戏状态
+ * @param color
+ * @return
+ */
+void Engine::checkGameState(Piece_Color color) {
+    // 移动一步后，自己不可能被将，只需要查看对方的状态
+    // 如果对方没有棋能动
+    //    如果对方被将，则自己赢了
+    //    如果对方没被将，则平局
+    // 如果对方有棋能动，则继续
 
-    GameState checking_state;
+    Piece_Color oppColor = flipPieceColor(color);
+    QList<Piece *> l;
+    GameState WinState;
+    if (color == Piece_Color::White) {
+        l = BlackPieces;
+        WinState = GameState::WhiteWin;
+    } else {
+        l = WhitePieces;
+        WinState = GameState::BlackWin;
+    }
 
-    // 检测白色是否被将军
-    bool beingCheckmated = isBeingCheckmated(Piece_Color::White);
+    bool beingCheckmated = isBeingCheckmated(oppColor);
     bool hasMoveChance = false;
-    foreach (Piece *p, WhitePieces) {
+    foreach (Piece *p, l) {
         if (!getMovablePos(p).isEmpty()) {
             hasMoveChance = true;
             break;
         }
     }
     if (hasMoveChance) {
-        checking_state = GameState::Unfinished;
-        // 这里不能return，要继续判断黑色，可能把白色把黑色将死、将平了
+        state = GameState::Unfinished;
     } else {
         if (beingCheckmated) {
-            // 输了
-            return GameState::BlackWin;
+            // 对方输了
+            state = WinState;
         } else {
-            return GameState::Draw;
-        }
-    }
-
-    // 如果白色没有被将军（如果白色被将军了，那就不用检查黑色了，因为不可能同时被将的）
-    if (!beingCheckmated) {
-        // 检测黑色是否被将军
-        beingCheckmated = isBeingCheckmated(Piece_Color::Black);
-        hasMoveChance = false;
-        foreach (Piece *p, BlackPieces) {
-            if (!getMovablePos(p).isEmpty()) {
-                hasMoveChance = true;
-                break;
-            }
-        }
-        if (hasMoveChance) {
-            checking_state = GameState::Unfinished;
-        } else {
-            if (beingCheckmated) {
-                // 输了
-                return GameState::WhiteWin;
-            } else {
-                return GameState::Draw;
-            }
+            state = GameState::Draw;
         }
     }
 
     // TODO Other Draw 只剩马？
-    return checking_state;
 }
 
 /**
@@ -382,7 +372,7 @@ QList<Position> Engine::getBasicFilteredMove(Position pos) {
 
 GameState Engine::nextGameState(Position from, Position to, Piece_Type promoteType) {
     movePiece(from, to, promoteType);
-    state = checkGameState();
+    checkGameState(getPiece(to)->getColor());
     return state;
 }
 
