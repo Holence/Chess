@@ -25,7 +25,7 @@ public:
     QList<Position> getBasicFilteredMove(Position pos);
     Piece *getPiece(Position pos);
 
-    void newGame(Piece_Color colorAtBottom);
+    void newGame();
     void endGame();
 
     GameState getGameState();

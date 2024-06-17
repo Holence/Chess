@@ -17,17 +17,12 @@ Engine::~Engine() {
     endGame();
 }
 
-void Engine::newGame(Piece_Color colorAtBottom) {
+void Engine::newGame() {
 
     board = new Cell[64]{nullptr};
 
-    if (colorAtBottom == Piece_Color::White) {
-        placePiece(Piece_Color::White, false);
-        placePiece(Piece_Color::Black, true);
-    } else {
-        placePiece(Piece_Color::Black, false);
-        placePiece(Piece_Color::White, true);
-    }
+    placePiece(Piece_Color::White, false);
+    placePiece(Piece_Color::Black, true);
 
     state = checkGameState();
 }
@@ -331,7 +326,7 @@ QList<Position> Engine::getMovablePos(Piece *p) {
             clearPos(pos_from);
             // 吃子
             if (p_to != nullptr) {
-                clearPos(p_to->getPos());
+                clearPos(p_to->getPos());           // 这里要重新获取p_to的pos，因为可能是EnPassantPawn
                 index = (*OppPieces).indexOf(p_to); // 用indexOf、insert保证顺序不变
                 (*OppPieces).removeAt(index);
             }
@@ -339,7 +334,7 @@ QList<Position> Engine::getMovablePos(Piece *p) {
 
             // 检测老王是否安全
             if (!isBeingCheckmated(pieceColor)) {
-                // 让安全的位置才可以走
+                // 让老王安全的位置才可以走
                 l.append(pos_to);
             }
 
@@ -381,7 +376,6 @@ GameState Engine::nextGameState(Position from, Position to) {
 }
 
 void Engine::movePiece(Position pos_from, Position pos_to) {
-    // TODO Pawn Promotion Menu?
 
     Piece *p_from = getPiece(pos_from);
     Piece *p_to = getPiece(pos_to);
@@ -410,7 +404,7 @@ void Engine::movePiece(Position pos_from, Position pos_to) {
     clearPos(pos_from);
     // 吃子
     if (p_to != nullptr) {
-        clearPos(p_to->getPos());
+        clearPos(p_to->getPos()); // 这里要重新获取p_to的pos，因为可能是EnPassantPawn
         if (p_to->getColor() == Piece_Color::White) {
             WhitePieces.removeOne(p_to);
             WhiteDeadPieces.append(p_to);

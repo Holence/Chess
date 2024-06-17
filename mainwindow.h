@@ -33,19 +33,21 @@ private slots:
 private:
     Ui::MainWindow *ui;
     Engine engine;
+    bool boardFilpped;
 
     Piece_Color selfColor;
 
     QMap<Piece_Type, QString> WhiteIcon, BlackIcon;
     void updateCellIcon(Position pos);
 
-    CellButton **board;
-    CellButton *getCell(Position pos);
+    CellButton **cellArray;
+    CellButton *getCellBtn(Position pos);
 
     CellButton *selectedCell;
     QList<CellButton *> movableCellList;
     QList<CellButton *> filteredCellList;
 
-    void showBasicFilter();
+    Position translatePos(Position pos);
+    QList<Position> translatePosList(QList<Position> posList);
 };
 #endif // MAINWINDOW_H

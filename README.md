@@ -4,7 +4,7 @@ TODO:
 
 - replay file
 
-  `Position from - Position to - Piece_Type eat`
+  `Position from - Position to - Piece eaten`
 
   这样也就支持倒推（悔棋）
 
@@ -15,6 +15,10 @@ TODO:
 - 人机对战
 
 # Design
+
+Backend是棋局的模拟器，不带有黑白属性，棋盘白下黑上。
+
+Frontend负责管理黑白双方的回合轮转，棋盘的翻转显示，需要向Backend传入标准化（白下黑上）的Position（见Frontend的`translatePos`），调用Backend的`getPiece`、`getPossibleMove`和`nextGameState`来移动棋子。
 
 ## Backend
 

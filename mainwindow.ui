@@ -47,6 +47,7 @@
      <string>Advance</string>
     </property>
     <addaction name="actionBasicFilter"/>
+    <addaction name="actionFlip_Board"/>
    </widget>
    <addaction name="menuGame"/>
    <addaction name="menuAdvance"/>
@@ -77,6 +78,14 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+1</string>
+   </property>
+  </action>
+  <action name="actionFlip_Board">
+   <property name="text">
+    <string>Flip Board</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+F</string>
    </property>
   </action>
  </widget>

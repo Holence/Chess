@@ -30,7 +30,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->widgetBoard->setLayout(grid);
 
     // dynamic add CellButton
-    board = new CellButton *[64];
+    cellArray = new CellButton *[64];
     for (int x = 1; x <= 8; x++) {
         for (int y = 1; y <= 8; y++) {
             Position pos{x, y};
@@ -40,11 +40,28 @@ MainWindow::MainWindow(QWidget *parent)
             connect(btn, &CellButton::leftClicked, this, &MainWindow::cellSelected);
             connect(btn, &CellButton::rightClicked, this, &MainWindow::cellCanceled);
             grid->addWidget(btn, 8 - y, x - 1);
-            board[convertPosToIndex(pos)] = btn;
+            cellArray[convertPosToIndex(pos)] = btn;
         }
     }
 
-    connect(ui->actionBasicFilter, &QAction::triggered, this, &MainWindow::showBasicFilter);
+    // Filter
+    connect(ui->actionBasicFilter, &QAction::triggered, this, [this] {
+        if (selectedCell) {
+            QList<Position> l = engine.getBasicFilteredMove(translatePos(selectedCell->getPos()));
+            foreach (Position pos, l) {
+                CellButton *btn = getCellBtn(pos);
+                btn->setStyleSheet("background-color: rgba(255,0,255,63);");
+                filteredCellList.append(btn);
+            }
+        }
+    });
+
+    // Flip Board
+    connect(ui->actionFlip_Board, &QAction::triggered, this, [this] {
+        boardFilpped = !boardFilpped;
+        drawBoard();
+        cellCanceled();
+    });
 
     connect(ui->actionSingle_New_Game, &QAction::triggered, this, &MainWindow::SinglePlayerGame);
     connect(ui->actionResign, &QAction::triggered, this, &MainWindow::GameOver);
@@ -57,13 +74,14 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow() {
     delete ui;
-    delete board;
+    delete cellArray;
 }
 
 void MainWindow::SinglePlayerGame() {
     // TODO select color box
     selfColor = Piece_Color::White;
-    engine.newGame(selfColor);
+    boardFilpped = true;
+    engine.newGame();
 
     drawBoard();
 
@@ -118,14 +136,17 @@ void MainWindow::GameOver() {
 }
 
 void MainWindow::cellSelected(Position pos) {
-    CellButton *current_select_btn = getCell(pos);
+    CellButton *current_select_btn = getCellBtn(pos);
 
     // 之前有选中有效的棋子
     if (selectedCell) {
         // 如果当前点的是可行的走位，则移动棋子
+        // TODO Pawn Promotion Menu
+
         if (movableCellList.contains(current_select_btn)) {
             Position orig_pos = selectedCell->getPos();
-            GameState state = engine.nextGameState(orig_pos, pos);
+            // TODO 改为标准化的字符串接口
+            GameState state = engine.nextGameState(translatePos(orig_pos), translatePos(pos));
             updateCellIcon(orig_pos);
             updateCellIcon(pos);
 
@@ -146,11 +167,12 @@ void MainWindow::cellSelected(Position pos) {
     }
     //
     else {
-        Piece *p = engine.getPiece(pos);
+        Piece *p = engine.getPiece(translatePos(pos));
+        // TODO 存储Piece*，如果是Pawn，落子时就要判断是否要Promote
         // 如果选中棋子 且 选中了己方的棋子
         if (p and p->getColor() == selfColor) {
             // 获取可行的走位
-            QList<Position> l = engine.getPossibleMove(pos);
+            QList<Position> l = translatePosList(engine.getPossibleMove(translatePos(pos)));
             if (l.isEmpty()) {
                 // 选的棋子没有可行的走位
                 selectedCell = nullptr;
@@ -158,7 +180,7 @@ void MainWindow::cellSelected(Position pos) {
                 selectedCell = current_select_btn;
                 foreach (Position pos, l) {
                     // 标为黄色
-                    CellButton *btn = getCell(pos);
+                    CellButton *btn = getCellBtn(pos);
                     btn->setStyleSheet("background-color: rgba(255,255,0,63);");
                     movableCellList.append(btn);
                 }
@@ -182,31 +204,36 @@ void MainWindow::cellCanceled() {
 }
 
 void MainWindow::updateCellIcon(Position pos) {
-    Piece *p = engine.getPiece(pos);
+    Piece *p = engine.getPiece(translatePos(pos));
     if (p) {
         if (p->getColor() == Piece_Color::White) {
-            getCell(pos)->setIcon(QIcon(WhiteIcon.value(p->getType(), QString())));
+            getCellBtn(pos)->setIcon(QIcon(WhiteIcon.value(p->getType(), QString())));
         } else {
-            getCell(pos)->setIcon(QIcon(BlackIcon.value(p->getType(), QString())));
+            getCellBtn(pos)->setIcon(QIcon(BlackIcon.value(p->getType(), QString())));
         }
     } else {
-        getCell(pos)->setIcon(QIcon(QString()));
+        getCellBtn(pos)->setIcon(QIcon(QString()));
     }
 }
 
-CellButton *MainWindow::getCell(Position pos) {
-    return board[convertPosToIndex(pos)];
+CellButton *MainWindow::getCellBtn(Position pos) {
+    return cellArray[convertPosToIndex(pos)];
 }
 
-void MainWindow::showBasicFilter() {
-    if (selectedCell) {
-        QList<Position> l = engine.getBasicFilteredMove(selectedCell->getPos());
-        foreach (Position pos, l) {
-            CellButton *btn = getCell(pos);
-            btn->setStyleSheet("background-color: rgba(255,0,255,63);");
-            filteredCellList.append(btn);
-        }
+Position MainWindow::translatePos(Position pos) {
+    if (!boardFilpped) {
+        return pos;
+    } else {
+        return flipSide(pos);
     }
+}
+
+QList<Position> MainWindow::translatePosList(QList<Position> posList) {
+    QList<Position> l;
+    foreach (Position pos, posList) {
+        l.append(translatePos(pos));
+    }
+    return l;
 }
 
 /**

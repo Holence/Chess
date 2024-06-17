@@ -19,3 +19,12 @@ QList<Position> King::getAttackMove() {
     };
     return l;
 }
+
+QList<Position> King::getAdditionMove() {
+    // TODO 王车易位
+    QList<Position> l;
+    return l;
+}
+
+void King::setMoved() {
+}
