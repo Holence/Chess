@@ -4,16 +4,16 @@
 #include "position.h"
 #include <QList>
 
-enum class Piece_Type { Pawn,
-                        King,
-                        Queen,
-                        Rook,
-                        Bishop,
-                        Knight,
-                        Null };
+enum Piece_Type : char { pawn = 'p',
+                         king = 'k',
+                         queen = 'q',
+                         rook = 'r',
+                         bishop = 'b',
+                         knight = 'n',
+                         null = '0' };
 
-enum class Piece_Color { White,
-                         Black };
+enum Piece_Color : char { White = 'w',
+                          Black = 'b' };
 
 class Piece {
 public:

@@ -20,6 +20,7 @@ SOURCES += \
     engine/queen.cpp \
     engine/rook.cpp \
     main.cpp \
+    replay.cpp \
     mainwindow.cpp
 
 HEADERS += \
@@ -33,6 +34,7 @@ HEADERS += \
     engine/position.h \
     engine/queen.h \
     engine/rook.h \
+    replay.h \
     mainwindow.h
 
 FORMS += \

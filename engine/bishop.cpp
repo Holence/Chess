@@ -1,7 +1,7 @@
 #include "bishop.h"
 
 Bishop::Bishop(Piece_Color color, Position pos) : Piece(color, pos) {
-    type = Piece_Type::Bishop;
+    type = Piece_Type::bishop;
 }
 
 QList<Position> Bishop::getAttackMove() {

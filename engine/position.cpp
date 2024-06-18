@@ -1,17 +1,25 @@
 #include "position.h"
 
-bool isValidPos(Position pos) {
-    return pos.x >= 1 and pos.x <= 8 and pos.y >= 1 and pos.y <= 8;
+bool Position::isValid() {
+    return x >= 1 and x <= 8 and y >= 1 and y <= 8;
 }
 
-int convertPosToIndex(Position pos) {
-    return pos.x - 1 + (pos.y - 1) * 8;
+int Position::toIndex() {
+    return x - 1 + (y - 1) * 8;
 }
 
-Position convertIndexToPos(int index) {
+Position Position::fromIndex(int index) {
     return Position{(index % 8) + 1, (index / 8) + 1};
 }
 
-Position flipSide(Position pos) {
-    return Position{9 - pos.x, 9 - pos.y};
+Position Position::flipSide() {
+    return Position{9 - x, 9 - y};
+}
+
+QString Position::toString() {
+    return QString("%1%2").arg(QChar('a' + x - 1)).arg(y);
+}
+
+Position Position::fromString(QString s) {
+    return Position{s.at(0).unicode() - 'a' + 1, s.at(1).digitValue()};
 }

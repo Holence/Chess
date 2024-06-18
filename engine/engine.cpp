@@ -43,7 +43,7 @@ void Engine::newGame() {
             if (c == '.')
                 continue;
 
-            pos = convertIndexToPos(index);
+            pos = Position::fromIndex(index);
             if (std::isupper(c)) {
                 c = std::tolower(c);
                 color = Piece_Color::White;
@@ -83,8 +83,7 @@ void Engine::newGame() {
         }
     }
 
-    // 白棋先走，意味着“之前”是黑棋下的
-    checkGameState(Piece_Color::Black);
+    EnPassantPawn = nullptr;
 }
 
 void Engine::endGame() {
@@ -107,10 +106,7 @@ void Engine::endGame() {
     BlackDeadPieces.clear();
     WhiteKing = nullptr;
     BlackKing = nullptr;
-}
-
-GameState Engine::getGameState() {
-    return state;
+    EnPassantPawn = nullptr;
 }
 
 /**
@@ -118,7 +114,7 @@ GameState Engine::getGameState() {
  * @param color
  * @return
  */
-void Engine::checkGameState(Piece_Color color) {
+GameState Engine::checkGameState(Piece_Color color) {
     // 移动一步后，自己不可能被将，只需要查看对方的状态
     // 如果对方没有棋能动
     //    如果对方被将，则自己赢了
@@ -145,13 +141,13 @@ void Engine::checkGameState(Piece_Color color) {
         }
     }
     if (hasMoveChance) {
-        state = GameState::Unfinished;
+        return GameState::Unfinished;
     } else {
         if (beingCheckmated) {
             // 对方输了
-            state = WinState;
+            return WinState;
         } else {
-            state = GameState::Draw;
+            return GameState::Draw;
         }
     }
 
@@ -169,7 +165,7 @@ QList<Position> Engine::getAttackingPos(Piece *p) {
     QList<Position> l = p->getAttackMove();
 
     // Knight🐎是不可阻挡的！！
-    if (p->getType() == Piece_Type::Knight) {
+    if (p->getType() == Piece_Type::knight) {
         return l;
     }
 
@@ -206,7 +202,7 @@ QList<Position> Engine::getAttackingPos(Piece *p) {
                     } else {
                         // 遇到对方的，加上这个位置
                         l.append(pos_check);
-                        if (p_check->getType() == Piece_Type::King)
+                        if (p_check->getType() == Piece_Type::king)
                             // 如果是对方的King，则后方也是势力范围
                             continue;
                         else
@@ -249,7 +245,7 @@ QList<Position> Engine::getMovablePos(Piece *p) {
     }
 
     // Pawn
-    if (p->getType() == Piece_Type::Pawn) {
+    if (p->getType() == Piece_Type::pawn) {
         // 如果斜着的地方有对方的子，则可斜吃
         QList<Position> l_copy = l;
         l.clear();
@@ -280,7 +276,7 @@ QList<Position> Engine::getMovablePos(Piece *p) {
     }
 
     // 如果是King，则不能走向对方的势力范围
-    if (p->getType() == Piece_Type::King) {
+    if (p->getType() == Piece_Type::king) {
         QList<Position> l_copy = l;
         l.clear();
         foreach (Position pos, l_copy) {
@@ -295,7 +291,7 @@ QList<Position> Engine::getMovablePos(Piece *p) {
             // 左边三格都空
             if (!getPiece(Position{piecePos.x - 1, piecePos.y}) and !getPiece(Position{piecePos.x - 2, piecePos.y}) and !getPiece(Position{piecePos.x - 3, piecePos.y})) {
                 Piece *leftPiece = getPiece({piecePos.x - 4, piecePos.y});
-                if (leftPiece and leftPiece->getType() == Piece_Type::Rook) {
+                if (leftPiece and leftPiece->getType() == Piece_Type::rook) {
                     // 左边的车没动过
                     if (((Rook *)leftPiece)->getMoved() == false) {
                         // 左边两格都没有pressure
@@ -309,7 +305,7 @@ QList<Position> Engine::getMovablePos(Piece *p) {
             // 右边两格都空
             if (!getPiece(Position{piecePos.x + 1, piecePos.y}) and !getPiece(Position{piecePos.x + 2, piecePos.y})) {
                 Piece *rightPiece = getPiece({piecePos.x + 3, piecePos.y});
-                if (rightPiece and rightPiece->getType() == Piece_Type::Rook) {
+                if (rightPiece and rightPiece->getType() == Piece_Type::rook) {
                     // 右边的车没动过
                     if (((Rook *)rightPiece)->getMoved() == false) {
                         // 左边两格都没有pressure
@@ -344,7 +340,7 @@ QList<Position> Engine::getMovablePos(Piece *p) {
 
             // ----------------Pawn----------------
             // 模拟En Passant
-            if (p_from->getType() == Piece_Type::Pawn) {
+            if (p_from->getType() == Piece_Type::pawn) {
                 // 作为Pawn，还能斜着走到空的位置，说明p_to一定是EnPassantPawn
                 if (pos_from.x != pos_to.x and p_to == nullptr) {
                     p_to = EnPassantPawn;
@@ -401,24 +397,26 @@ QList<Position> Engine::getBasicFilteredMove(Position pos) {
     }
 }
 
-GameState Engine::nextGameState(Position from, Position to, Piece_Type promoteType) {
-    movePiece(from, to, promoteType);
-    checkGameState(getPiece(to)->getColor());
-    return state;
-}
-
+/**
+ * 移动棋子
+ * @param pos_from 移动的起点
+ * @param pos_to 移动的终点，如果终点有棋子，那么就是被吃掉的棋子（EnPassant的情况会特殊处理）
+ * @param promoteType 如果是Pawn的Promotion，要传入对应的promoteType，否则传入Piece_Type::null
+ * @return 被吃掉的棋子的指针
+ */
 void Engine::movePiece(Position pos_from, Position pos_to, Piece_Type promoteType) {
 
     Piece *p_from = getPiece(pos_from);
     Piece *p_to = getPiece(pos_to);
 
     // ----------------Pawn----------------
-    if (p_from->getType() == Piece_Type::Pawn) {
+    if (p_from->getType() == Piece_Type::pawn) {
         Pawn *p = (Pawn *)p_from;
         p->setMoved();
 
         // 作为Pawn，还能斜着走到空的位置，说明p_to一定是EnPassantPawn
         if (pos_from.x != pos_to.x and p_to == nullptr) {
+            // 被吃掉的重新绑定为EnPassantPawn
             p_to = EnPassantPawn;
         }
 
@@ -430,7 +428,7 @@ void Engine::movePiece(Position pos_from, Position pos_to, Piece_Type promoteTyp
         }
 
         // 如果有promotion
-        if (promoteType != Piece_Type::Null) {
+        if (promoteType != Piece_Type::null) {
             Piece_Color color = p_from->getColor();
 
             QList<Piece *> *l;
@@ -445,16 +443,16 @@ void Engine::movePiece(Position pos_from, Position pos_to, Piece_Type promoteTyp
 
             // 变身为新Piece
             switch (promoteType) {
-            case Piece_Type::Rook:
+            case Piece_Type::rook:
                 p_from = new Rook(color, pos_from);
                 break;
-            case Piece_Type::Knight:
+            case Piece_Type::knight:
                 p_from = new Knight(color, pos_from);
                 break;
-            case Piece_Type::Bishop:
+            case Piece_Type::bishop:
                 p_from = new Bishop(color, pos_from);
                 break;
-            case Piece_Type::Queen:
+            case Piece_Type::queen:
                 p_from = new Queen(color, pos_from);
                 break;
             default:
@@ -468,7 +466,7 @@ void Engine::movePiece(Position pos_from, Position pos_to, Piece_Type promoteTyp
     // ------------------------------------
 
     // ----------------King----------------
-    if (p_from->getType() == Piece_Type::King) {
+    if (p_from->getType() == Piece_Type::king) {
         King *p = (King *)p_from;
         p->setMoved();
         // 如果横向走两个，说明是王车易位
@@ -511,7 +509,7 @@ void Engine::movePiece(Position pos_from, Position pos_to, Piece_Type promoteTyp
 }
 
 Piece *Engine::getPiece(Position pos) {
-    return board[convertPosToIndex(pos)];
+    return board[pos.toIndex()];
 }
 
 /**
@@ -520,12 +518,12 @@ Piece *Engine::getPiece(Position pos) {
  * @param pos
  */
 void Engine::putPiece(Piece *p, Position pos) {
-    board[convertPosToIndex(pos)] = p;
+    board[pos.toIndex()] = p;
     p->setPos(pos);
 }
 
 void Engine::clearPos(Position pos) {
-    board[convertPosToIndex(pos)] = nullptr;
+    board[pos.toIndex()] = nullptr;
 }
 
 /**

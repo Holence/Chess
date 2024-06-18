@@ -1,7 +1,7 @@
 #include "king.h"
 
 King::King(Piece_Color color, Position pos) : Piece(color, pos) {
-    type = Piece_Type::King;
+    type = Piece_Type::king;
     moved = pos.x != 5;
     if (color == Piece_Color::White) {
         moved = pos.y != 1;
@@ -18,7 +18,7 @@ QList<Position> King::getAttackMove() {
                 continue;
             else {
                 Position p{pos.x + i, pos.y + j};
-                if (isValidPos(p))
+                if (p.isValid())
                     l.append(p);
             }
         }

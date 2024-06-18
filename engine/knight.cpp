@@ -1,7 +1,7 @@
 #include "knight.h"
 
 Knight::Knight(Piece_Color color, Position pos) : Piece(color, pos) {
-    type = Piece_Type::Knight;
+    type = Piece_Type::knight;
 }
 
 QList<Position> Knight::getAttackMove() {
@@ -11,7 +11,7 @@ QList<Position> Knight::getAttackMove() {
         for (int j : m) {
             if (std::abs(i) + std::abs(j) == 3) {
                 Position p{pos.x + i, pos.y + j};
-                if (isValidPos(p))
+                if (p.isValid())
                     l.append(p);
             }
         }

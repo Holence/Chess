@@ -1,7 +1,7 @@
 #include "queen.h"
 
 Queen::Queen(Piece_Color color, Position pos) : Piece(color, pos) {
-    type = Piece_Type::Queen;
+    type = Piece_Type::queen;
 }
 
 QList<Position> Queen::getAttackMove() {
@@ -19,7 +19,7 @@ QList<Position> Queen::getAttackMove() {
 
             for (int x = pos.x + x_offset, y = pos.y + y_offset; true; x += x_offset, y += y_offset) {
                 Position pos_check{x, y};
-                if (isValidPos(pos_check)) {
+                if (pos_check.isValid()) {
                     l.append(pos_check);
                 } else {
                     break;

@@ -19,7 +19,8 @@ public:
     Engine();
     ~Engine();
 
-    GameState nextGameState(Position from, Position to, Piece_Type promoteType);
+    void movePiece(Position from, Position to, Piece_Type promoteType);
+    GameState checkGameState(Piece_Color color);
 
     QList<Position> getPossibleMove(Position pos);
     QList<Position> getBasicFilteredMove(Position pos);
@@ -28,12 +29,7 @@ public:
     void newGame();
     void endGame();
 
-    GameState getGameState();
-
 private:
-    GameState state;
-    void checkGameState(Piece_Color color);
-
     Cell *board; // board是指向Cell array的指针
     QList<Piece *> WhitePieces;
     QList<Piece *> WhiteDeadPieces;
@@ -46,7 +42,6 @@ private:
     void placePiece(Piece_Color color, bool reversed);
     void putPiece(Piece *p, Position pos);
     void clearPos(Position pos);
-    void movePiece(Position from, Position to, Piece_Type promoteType);
 
     int caclPressure(Position pos, Piece_Color color);
     bool hasPressure(Position pos, Piece_Color color);

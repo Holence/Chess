@@ -3,6 +3,7 @@
 
 #include "cellbutton.h"
 #include "engine/engine.h"
+#include "replay.h"
 #include <QMainWindow>
 #include <QPushButton>
 
@@ -18,13 +19,10 @@ class MainWindow : public QMainWindow {
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-    void drawBoard();
-    void SinglePlayerGame();
-    void GameOver();
 
 signals:
     void pieceMoved();
-    void gameEnded();
+    void gameEnded(GameState state);
 
 private slots:
     void cellSelected(Position pos);
@@ -33,12 +31,13 @@ private slots:
 private:
     Ui::MainWindow *ui;
     Engine engine;
-    bool boardFilpped;
 
+    bool boardFilpped;
     Piece_Color selfColor;
 
     QMap<Piece_Type, QString> WhiteIcon, BlackIcon;
     void updateCellIcon(Position pos);
+    void drawBoard();
 
     CellButton **cellArray;
     CellButton *getCellBtn(Position pos);
@@ -52,5 +51,13 @@ private:
     QList<Position> translatePosList(QList<Position> posList);
 
     Piece_Type getPawnPromotion();
+
+    Replay *replay;
+    void startReplay();
+    void ReplayNextMove();
+    void ReplayPreviousMove();
+
+    void startSinglePlayerGame();
+    void GameOver(GameState state);
 };
 #endif // MAINWINDOW_H

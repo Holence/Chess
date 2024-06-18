@@ -1,7 +1,7 @@
 #include "pawn.h"
 
 Pawn::Pawn(Piece_Color color, Position pos) : Piece(color, pos) {
-    type = Piece_Type::Pawn;
+    type = Piece_Type::pawn;
     if (color == Piece_Color::White) {
         moved = pos.y != 2;
         direction = 1;
@@ -15,10 +15,10 @@ QList<Position> Pawn::getAttackMove() {
     QList<Position> l;
     Position p;
     p = Position{pos.x - 1, pos.y + 1 * direction};
-    if (isValidPos(p))
+    if (p.isValid())
         l.append(p);
     p = Position{pos.x + 1, pos.y + 1 * direction};
-    if (isValidPos(p))
+    if (p.isValid())
         l.append(p);
 
     return l;
@@ -28,7 +28,7 @@ QList<Position> Pawn::getAdditionMove() {
     QList<Position> l;
     Position p;
     p = Position{pos.x, pos.y + 1 * direction};
-    if (isValidPos(p))
+    if (p.isValid())
         l.append(p);
 
     if (!moved) {

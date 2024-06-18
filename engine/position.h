@@ -1,5 +1,6 @@
 #ifndef POSITION_H
 #define POSITION_H
+#include <QString>
 
 // y
 // 8 . . . . . . . .
@@ -18,11 +19,12 @@ struct Position {
     bool operator==(const Position &that) {
         return x == that.x and y == that.y;
     }
+    QString toString();
+    static Position fromString(QString s);
+    static Position fromIndex(int index);
+    bool isValid();
+    int toIndex();
+    Position flipSide();
 };
-
-bool isValidPos(Position pos);
-int convertPosToIndex(Position pos);
-Position convertIndexToPos(int index);
-Position flipSide(Position pos);
 
 #endif // POSITION_H

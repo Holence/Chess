@@ -49,8 +49,17 @@
     <addaction name="actionBasicFilter"/>
     <addaction name="actionFlip_Board"/>
    </widget>
+   <widget class="QMenu" name="menuReplay">
+    <property name="title">
+     <string>Replay</string>
+    </property>
+    <addaction name="actionLoad_Replay"/>
+    <addaction name="actionNext_Move"/>
+    <addaction name="actionPrevious_Move"/>
+   </widget>
    <addaction name="menuGame"/>
    <addaction name="menuAdvance"/>
+   <addaction name="menuReplay"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionSingle_New_Game">
@@ -86,6 +95,30 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+F</string>
+   </property>
+  </action>
+  <action name="actionLoad_Replay">
+   <property name="text">
+    <string>Load Replay</string>
+   </property>
+  </action>
+  <action name="actionNext_Move">
+   <property name="text">
+    <string>Next Move</string>
+   </property>
+   <property name="shortcut">
+    <string>.</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionPrevious_Move">
+   <property name="text">
+    <string>Previous Move</string>
+   </property>
+   <property name="shortcut">
+    <string>,</string>
    </property>
   </action>
  </widget>
