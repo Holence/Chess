@@ -1,12 +1,13 @@
 #include "pawn.h"
 
-Pawn::Pawn(Piece_Color color, Position pos, Direction direction) : Piece(color, pos) {
+Pawn::Pawn(Piece_Color color, Position pos) : Piece(color, pos) {
     type = Piece_Type::Pawn;
-    this->direction = direction;
-    if (direction == Direction::Up) {
+    if (color == Piece_Color::White) {
         moved = pos.y != 2;
+        direction = 1;
     } else {
         moved = pos.y != 7;
+        direction = -1;
     }
 }
 
@@ -40,8 +41,12 @@ void Pawn::setMoved() {
     moved = true;
 }
 
+bool Pawn::getMoved() {
+    return moved;
+}
+
 bool Pawn::isReadyToPromote() {
-    if (direction == Direction::Up) {
+    if (color == Piece_Color::White) {
         return pos.y == 7;
     } else {
         return pos.y == 2;

@@ -5,19 +5,16 @@
 
 class Pawn : public Piece {
 public:
-    enum Direction : int {
-        Up = 1,
-        Down = -1
-    };
-    Pawn(Piece_Color color, Position pos, Direction direction);
+    Pawn(Piece_Color color, Position pos);
     QList<Position> getAttackMove();
     QList<Position> getAdditionMove();
     void setMoved();
+    bool getMoved();
     bool isReadyToPromote();
 
 private:
     bool moved;
-    Direction direction;
+    int direction;
 };
 
 #endif // PAWN_H

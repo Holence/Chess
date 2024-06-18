@@ -2,6 +2,12 @@
 
 King::King(Piece_Color color, Position pos) : Piece(color, pos) {
     type = Piece_Type::King;
+    moved = pos.x != 5;
+    if (color == Piece_Color::White) {
+        moved = pos.y != 1;
+    } else {
+        moved = pos.y != 8;
+    }
 }
 
 QList<Position> King::getAttackMove() {
@@ -20,11 +26,10 @@ QList<Position> King::getAttackMove() {
     return l;
 }
 
-QList<Position> King::getAdditionMove() {
-    // TODO 王车易位
-    QList<Position> l;
-    return l;
+void King::setMoved() {
+    moved = true;
 }
 
-void King::setMoved() {
+bool King::getMoved() {
+    return moved;
 }

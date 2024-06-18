@@ -8,7 +8,7 @@
 
 // 白棋大写，黑棋小写，白下黑上
 char chessBoardCode[] =
-    "rnbkqbnr"
+    "rnbqkbnr"
     "pppppppp"
     "........"
     "........"
@@ -31,7 +31,6 @@ void Engine::newGame() {
     Piece_Color color;
     QList<Piece *> *PiecesList;
     Piece **king;
-    Pawn::Direction direction;
     Position pos;
     Piece *p;
     int index = -1;
@@ -50,12 +49,10 @@ void Engine::newGame() {
                 color = Piece_Color::White;
                 PiecesList = &WhitePieces;
                 king = &WhiteKing;
-                direction = Pawn::Direction::Up;
             } else {
                 color = Piece_Color::Black;
                 PiecesList = &BlackPieces;
                 king = &BlackKing;
-                direction = Pawn::Direction::Down;
             }
             switch (c) {
             case 'r':
@@ -75,7 +72,7 @@ void Engine::newGame() {
                 *king = p;
                 break;
             case 'p':
-                p = new Pawn(color, pos, direction);
+                p = new Pawn(color, pos);
                 break;
             default:
                 break;
@@ -263,6 +260,7 @@ QList<Position> Engine::getMovablePos(Piece *p) {
                     l.append(pos);
             }
         }
+
         // En passant
         if (EnPassantPawn != nullptr) {
             Position EnPassantPos = EnPassantPawn->getPos();
@@ -275,8 +273,7 @@ QList<Position> Engine::getMovablePos(Piece *p) {
 
         // 到这里才给出向前进的pos，遇到任何子，都不能走上去
         foreach (Position pos, ((Pawn *)p)->getAdditionMove()) {
-            Piece *p = getPiece(pos);
-            if (!p) {
+            if (!getPiece(pos)) {
                 l.append(pos);
             }
         }
@@ -290,6 +287,40 @@ QList<Position> Engine::getMovablePos(Piece *p) {
             if (!hasPressure(pos, flipPieceColor(pieceColor)))
                 l.append(pos);
         }
+
+        // 王车易位
+        // 王没动过 且 没被将军
+        if (((King *)p)->getMoved() == false and !isBeingCheckmated(pieceColor)) {
+            // 左边的车
+            // 左边三格都空
+            if (!getPiece(Position{piecePos.x - 1, piecePos.y}) and !getPiece(Position{piecePos.x - 2, piecePos.y}) and !getPiece(Position{piecePos.x - 3, piecePos.y})) {
+                Piece *leftPiece = getPiece({piecePos.x - 4, piecePos.y});
+                if (leftPiece and leftPiece->getType() == Piece_Type::Rook) {
+                    // 左边的车没动过
+                    if (((Rook *)leftPiece)->getMoved() == false) {
+                        // 左边两格都没有pressure
+                        if (!hasPressure(Position{piecePos.x - 1, piecePos.y}, flipPieceColor(pieceColor)) and !hasPressure(Position{piecePos.x - 2, piecePos.y}, flipPieceColor(pieceColor))) {
+                            l.append(Position{piecePos.x - 2, piecePos.y});
+                        }
+                    }
+                }
+            }
+            // 右边的车
+            // 右边两格都空
+            if (!getPiece(Position{piecePos.x + 1, piecePos.y}) and !getPiece(Position{piecePos.x + 2, piecePos.y})) {
+                Piece *rightPiece = getPiece({piecePos.x + 3, piecePos.y});
+                if (rightPiece and rightPiece->getType() == Piece_Type::Rook) {
+                    // 右边的车没动过
+                    if (((Rook *)rightPiece)->getMoved() == false) {
+                        // 左边两格都没有pressure
+                        if (!hasPressure(Position{piecePos.x + 1, piecePos.y}, flipPieceColor(pieceColor)) and !hasPressure(Position{piecePos.x + 2, piecePos.y}, flipPieceColor(pieceColor))) {
+                            l.append(Position{piecePos.x + 2, piecePos.y});
+                        }
+                    }
+                }
+            }
+        }
+
     } else {
         // 被将军时，其他兵只能保护老王
         // 如果没被将军，但顶在老王前面，某些移动的方向也会导致老王被将军，这些位置也不可以去
@@ -433,6 +464,30 @@ void Engine::movePiece(Position pos_from, Position pos_to, Piece_Type promoteTyp
         }
     } else {
         EnPassantPawn = nullptr;
+    }
+    // ------------------------------------
+
+    // ----------------King----------------
+    if (p_from->getType() == Piece_Type::King) {
+        King *p = (King *)p_from;
+        p->setMoved();
+        // 如果横向走两个，说明是王车易位
+        if (std::abs(pos_to.x - pos_from.x) == 2) {
+            // 这里只用处理车的走位，王的走位让下面默认的逻辑处理
+            if (pos_to.x - pos_from.x < 0) {
+                // King往左走
+                Rook *leftRook = (Rook *)getPiece(Position{pos_from.x - 4, pos_from.y});
+                clearPos(leftRook->getPos());
+                putPiece(leftRook, Position{pos_from.x - 1, pos_from.y});
+                leftRook->setMoved();
+            } else {
+                // King往右走
+                Rook *rightRook = (Rook *)getPiece(Position{pos_from.x + 3, pos_from.y});
+                clearPos(rightRook->getPos());
+                putPiece(rightRook, Position{pos_from.x + 1, pos_from.y});
+                rightRook->setMoved();
+            }
+        }
     }
     // ------------------------------------
 

@@ -68,6 +68,12 @@ MainWindow::MainWindow(QWidget *parent)
     ui->actionSingle_New_Game->setDisabled(false);
     ui->widgetBoard->setDisabled(true);
     ui->actionResign->setDisabled(true);
+
+    // TODO Replay
+    // TODO Online Match
+    // TODO Chat
+    // TODO Taunt
+    // TODO Sound/BGM
 }
 
 MainWindow::~MainWindow() {
@@ -155,11 +161,18 @@ void MainWindow::cellSelected(Position pos) {
             updateCellIcon(orig_pos);
             updateCellIcon(pos);
 
-            // 为了那狗屎的EnPassant，我也懒得设计其他接口，也不想每次都对整个棋盘全部刷新，这里额外刷新orig_pos左右两侧的格子🤣
-            if (orig_pos.x > 1)
-                updateCellIcon(Position{orig_pos.x - 1, orig_pos.y});
-            if (orig_pos.x < 8)
-                updateCellIcon(Position{orig_pos.x + 1, orig_pos.y});
+            if (selectedPiece->getType() != Piece_Type::King) {
+                // 为了那狗屎的EnPassant，我也懒得设计其他接口，也不想每次都对整个棋盘全部刷新，这里额外刷新orig_pos左右两侧的格子🤣
+                if (orig_pos.x > 1)
+                    updateCellIcon(Position{orig_pos.x - 1, orig_pos.y});
+                if (orig_pos.x < 8)
+                    updateCellIcon(Position{orig_pos.x + 1, orig_pos.y});
+            } else {
+                // 还有王车易位，直接刷新一整行算了
+                for (int i = 1; i <= 8; i++) {
+                    updateCellIcon(Position{i, orig_pos.y});
+                }
+            }
 
             emit pieceMoved();
             cellCanceled();

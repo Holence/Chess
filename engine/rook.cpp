@@ -2,6 +2,12 @@
 
 Rook::Rook(Piece_Color color, Position pos) : Piece(color, pos) {
     type = Piece_Type::Rook;
+    moved = pos.x != 1 and pos.x != 8;
+    if (color == Piece_Color::White) {
+        moved = pos.y != 1;
+    } else {
+        moved = pos.y != 8;
+    }
 }
 
 QList<Position> Rook::getAttackMove() {
@@ -20,4 +26,12 @@ QList<Position> Rook::getAttackMove() {
     }
 
     return l;
+}
+
+void Rook::setMoved() {
+    moved = true;
+}
+
+bool Rook::getMoved() {
+    return moved;
 }
