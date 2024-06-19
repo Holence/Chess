@@ -23,11 +23,7 @@ public:
     GameState checkGameState(Piece_Color color);
 
     QList<Position> getPossibleMove(Position pos);
-    QList<Position> getBasicFilteredMove(Position pos);
     Piece *getPiece(Position pos);
-
-    void newGame();
-    void endGame();
 
 private:
     Cell *board; // board是指向Cell array的指针

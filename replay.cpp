@@ -1,5 +1,4 @@
 #include "replay.h"
-#include <QDebug>
 #include <QDir>
 
 Replay::Replay(QFile::OpenModeFlag mode) {
@@ -13,10 +12,18 @@ Replay::Replay(QFile::OpenModeFlag mode) {
     this->mode = mode;
 }
 
+/**
+ * 写replay模式，每次board.pieceMoved信号触发后，调用这里的addMovement记录移动
+ * @param color
+ */
 Replay::Replay(Piece_Color color) : Replay(QFile::WriteOnly) {
     selfColor = color;
 }
 
+/**
+ * 读replay模式，调用getMovement获取每步
+ * @param filename
+ */
 Replay::Replay(QString &filename) : Replay(QFile::ReadOnly) {
     QFile file(filename);
     if (file.open(QFile::ReadOnly)) {
@@ -33,7 +40,6 @@ Replay::Replay(QString &filename) : Replay(QFile::ReadOnly) {
             m.pos_from = Position::fromString(sl.at(0));
             m.pos_to = Position::fromString(sl.at(1));
 
-            qDebug() << sl.at(0) << sl.at(1);
             if (sl.length() == 3) {
                 m.promteType = typeMap.value(sl.at(2).at(0).unicode());
             }
@@ -46,16 +52,16 @@ Replay::Replay(QString &filename) : Replay(QFile::ReadOnly) {
 void Replay::addMovement(Position pos_from, Position pos_to, Piece_Type promteType) {
     Movement m;
     m.pos_from = pos_from;
-    m.pos_from = pos_to;
+    m.pos_to = pos_to;
     m.promteType = promteType;
     movementList.append(m);
 }
 
-Replay::Movement Replay::getMovement(int index) {
-    return movementList.at(index);
+QList<Replay::Movement> Replay::getMovementList() {
+    return movementList;
 }
 
-void Replay::replayEnd() {
+void Replay::replaySave() {
     if (mode == QFile::WriteOnly) {
         QDir dir;
         if (!dir.exists("./replay")) {
@@ -76,7 +82,6 @@ void Replay::replayEnd() {
             file.close();
         }
     }
-    movementList.clear();
 }
 
 Piece_Color Replay::getSelfColor() {

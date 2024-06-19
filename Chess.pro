@@ -9,6 +9,8 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    basemainwindow.cpp \
+    board.cpp \
     cellbutton.cpp \
     engine/bishop.cpp \
     engine/engine.cpp \
@@ -20,10 +22,14 @@ SOURCES += \
     engine/queen.cpp \
     engine/rook.cpp \
     main.cpp \
+    mainwindow.cpp \
     replay.cpp \
-    mainwindow.cpp
+    replaywindow.cpp \
+    singleplayerwindow.cpp
 
 HEADERS += \
+    basemainwindow.h \
+    board.h \
     cellbutton.h \
     engine/bishop.h \
     engine/engine.h \
@@ -34,11 +40,13 @@ HEADERS += \
     engine/position.h \
     engine/queen.h \
     engine/rook.h \
+    mainwindow.h \
     replay.h \
-    mainwindow.h
+    replaywindow.h \
+    singleplayerwindow.h
 
 FORMS += \
-    mainwindow.ui
+    basewindow.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

@@ -18,14 +18,6 @@ char chessBoardCode[] =
     "RNBQKBNR";
 
 Engine::Engine() {
-}
-
-Engine::~Engine() {
-    endGame();
-}
-
-void Engine::newGame() {
-
     board = new Cell[64]{nullptr};
 
     Piece_Color color;
@@ -86,8 +78,8 @@ void Engine::newGame() {
     EnPassantPawn = nullptr;
 }
 
-void Engine::endGame() {
-    std::fill_n(board, 64, nullptr);
+Engine::~Engine() {
+    delete board;
     for (int i = 0; i < WhitePieces.length(); i++) {
         delete WhitePieces.at(i);
     }
@@ -271,6 +263,9 @@ QList<Position> Engine::getMovablePos(Piece *p) {
         foreach (Position pos, ((Pawn *)p)->getAdditionMove()) {
             if (!getPiece(pos)) {
                 l.append(pos);
+            } else {
+                // 如果getAdditionMove返回了两个，且第一个位置有子挡着了，那第二个也到不了的
+                break;
             }
         }
     }
@@ -383,15 +378,6 @@ QList<Position> Engine::getPossibleMove(Position pos) {
     Piece *p = getPiece(pos);
     if (p != nullptr) {
         return getMovablePos(p);
-    } else {
-        return QList<Position>();
-    }
-}
-
-QList<Position> Engine::getBasicFilteredMove(Position pos) {
-    Piece *p = getPiece(pos);
-    if (p != nullptr) {
-        return getAttackingPos(p);
     } else {
         return QList<Position>();
     }

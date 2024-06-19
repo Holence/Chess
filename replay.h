@@ -16,10 +16,10 @@ public:
     Replay(Piece_Color color);
     Replay(QString &filename);
     void addMovement(Position pos_from, Position pos_to, Piece_Type promteType);
-    void replayEnd();
+    void replaySave();
 
     Piece_Color getSelfColor();
-    Movement getMovement(int index);
+    QList<Movement> getMovementList();
 
 private:
     QFile::OpenModeFlag mode;
