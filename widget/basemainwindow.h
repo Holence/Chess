@@ -1,7 +1,7 @@
 #ifndef BASEMAINWINDOW_H
 #define BASEMAINWINDOW_H
 #include "engine/piece.h"
-#include "ui_basewindow.h"
+#include "ui_basemainwindow.h"
 #include <QMainWindow>
 
 QT_BEGIN_NAMESPACE

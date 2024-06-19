@@ -1,9 +1,9 @@
 #ifndef SINGLEPLAYERWINDOW_H
 #define SINGLEPLAYERWINDOW_H
 
-#include "board.h"
 #include "replay.h"
-#include "basemainwindow.h"
+#include "widget/basemainwindow.h"
+#include "widget/board.h"
 
 class SinglePlayerWindow : public BaseMainWindow {
     Q_OBJECT

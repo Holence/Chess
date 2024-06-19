@@ -1,9 +1,9 @@
 #ifndef REPLAYWINDOW_H
 #define REPLAYWINDOW_H
 
-#include "basemainwindow.h"
-#include "board.h"
 #include "replay.h"
+#include "widget/basemainwindow.h"
+#include "widget/board.h"
 
 class ReplayWindow : public BaseMainWindow {
 public:
