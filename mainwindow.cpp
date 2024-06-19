@@ -7,6 +7,9 @@
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow{parent} {
+    setWindowTitle("Chess");
+    setMinimumWidth(250);
+
     QWidget *centralwidget = new QWidget();
 
     QVBoxLayout *layout = new QVBoxLayout();

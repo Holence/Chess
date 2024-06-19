@@ -12,6 +12,8 @@ public:
     Board(QWidget *parent, Piece_Color selfColor, bool replayMode = false);
     ~Board();
 
+    static const QMap<Piece_Type, QString> WhiteIcon, BlackIcon;
+
     // 单人模拟中要用
     void flipSelfColor();
 
@@ -23,6 +25,8 @@ signals:
     void pieceMoved(Position pos_from, Position pos_to, Piece_Type promoteType);
     // 棋局结束后触发
     void gameEnded(GameState state);
+    // 棋子移动后，存在被吃掉的棋子，召唤主界面绘制
+    void pieceEaten(Piece *p_eaten);
 
 private slots:
     void cellSelected(Position pos);
@@ -36,7 +40,6 @@ private:
     Piece_Color selfColor;
     bool boardFilpped;
 
-    QMap<Piece_Type, QString> WhiteIcon, BlackIcon;
     void updateCellIcon(Position pos);
     void drawBoard();
 

@@ -2,23 +2,28 @@
 #include <QDialog>
 #include <QGridLayout>
 
+const QMap<Piece_Type, QString> Board::WhiteIcon = {
+    {Piece_Type::king, ":/img/wk.png"},
+    {Piece_Type::rook, ":/img/wr.png"},
+    {Piece_Type::queen, ":/img/wq.png"},
+    {Piece_Type::knight, ":/img/wn.png"},
+    {Piece_Type::bishop, ":/img/wb.png"},
+    {Piece_Type::pawn, ":/img/wp.png"},
+};
+
+const QMap<Piece_Type, QString> Board::BlackIcon = {
+    {Piece_Type::king, ":/img/bk.png"},
+    {Piece_Type::rook, ":/img/br.png"},
+    {Piece_Type::queen, ":/img/bq.png"},
+    {Piece_Type::knight, ":/img/bn.png"},
+    {Piece_Type::bishop, ":/img/bb.png"},
+    {Piece_Type::pawn, ":/img/bp.png"},
+};
+
 Board::Board(QWidget *parent, Piece_Color selfColor, bool replayMode)
     : QWidget(parent), engine() {
 
     this->selfColor = selfColor;
-
-    WhiteIcon[Piece_Type::king] = ":/img/wk.png";
-    BlackIcon[Piece_Type::king] = ":/img/bk.png";
-    WhiteIcon[Piece_Type::rook] = ":/img/wr.png";
-    BlackIcon[Piece_Type::rook] = ":/img/br.png";
-    WhiteIcon[Piece_Type::queen] = ":/img/wq.png";
-    BlackIcon[Piece_Type::queen] = ":/img/bq.png";
-    WhiteIcon[Piece_Type::knight] = ":/img/wn.png";
-    BlackIcon[Piece_Type::knight] = ":/img/bn.png";
-    WhiteIcon[Piece_Type::bishop] = ":/img/wb.png";
-    BlackIcon[Piece_Type::bishop] = ":/img/bb.png";
-    WhiteIcon[Piece_Type::pawn] = ":/img/wp.png";
-    BlackIcon[Piece_Type::pawn] = ":/img/bp.png";
 
     // draw board
     setFixedSize(QSize(800, 800));
@@ -92,7 +97,10 @@ void Board::flipSelfColor() {
 void Board::movePiece(Position pos_from, Position pos_to, Piece_Type promoteType) {
     // 标准通信
     selectedPiece = engine.getPiece(pos_from);
-    engine.movePiece(pos_from, pos_to, promoteType);
+    Piece *p_eaten = engine.movePiece(pos_from, pos_to, promoteType);
+    if (p_eaten) {
+        emit pieceEaten(p_eaten);
+    }
 
     // board需要转义过的
     pos_from = translatePos(pos_from);
@@ -136,7 +144,10 @@ void Board::cellSelected(Position pos) {
             } else {
                 promoteType = Piece_Type::null;
             }
-            engine.movePiece(translatePos(orig_pos), translatePos(pos), promoteType);
+            Piece *p_eaten = engine.movePiece(translatePos(orig_pos), translatePos(pos), promoteType);
+            if (p_eaten) {
+                emit pieceEaten(p_eaten);
+            }
 
             // 刷新棋盘画面
             updateCellIcon(orig_pos);
@@ -191,11 +202,11 @@ void Board::cellSelected(Position pos) {
 }
 
 Piece_Type Board::getPawnPromotion() {
-    QMap<Piece_Type, QString> *iconMap;
+    QMap<Piece_Type, QString> iconMap;
     if (selectedPiece->getColor() == Piece_Color::White)
-        iconMap = &WhiteIcon;
+        iconMap = WhiteIcon;
     else
-        iconMap = &BlackIcon;
+        iconMap = BlackIcon;
     QDialog dlg(this);
     dlg.setStyleSheet("QPushButton{background-color: rgba(0,0,0,0);}");
     QHBoxLayout layout;
@@ -205,7 +216,7 @@ Piece_Type Board::getPawnPromotion() {
         connect(b, &QPushButton::clicked, &dlg, [&, i] { dlg.done(i); });
         b->setIconSize(QSize(100, 100));
         b->setFixedSize(QSize(100, 100));
-        b->setIcon(QIcon(iconMap->value(typeArray[i])));
+        b->setIcon(QIcon(iconMap.value(typeArray[i])));
         layout.addWidget(b);
     }
     dlg.setLayout(&layout);

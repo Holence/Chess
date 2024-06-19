@@ -2,6 +2,7 @@
 #include <QMessageBox>
 
 SinglePlayerWindow::SinglePlayerWindow(QWidget *parent) : BaseMainWindow(parent) {
+    setWindowTitle("Single Player Mode");
 
     // TODO select color box
     selfColor = Piece_Color::White;
@@ -18,6 +19,7 @@ SinglePlayerWindow::SinglePlayerWindow(QWidget *parent) : BaseMainWindow(parent)
     board = new Board(this, selfColor, false);
     // 单人游戏 移动棋子后更换selfColor
     connect(board, &Board::pieceMoved, this, &SinglePlayerWindow::pieceMovedSlot);
+    connect(board, &Board::pieceEaten, this, &BaseMainWindow::addPieceEaten);
     connect(board, &Board::gameEnded, this, &SinglePlayerWindow::gameEndSlot);
     ui->centerLayout->addWidget(board);
 

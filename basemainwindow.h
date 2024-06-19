@@ -1,6 +1,6 @@
 #ifndef BASEMAINWINDOW_H
 #define BASEMAINWINDOW_H
-
+#include "engine/piece.h"
 #include "ui_basewindow.h"
 #include <QMainWindow>
 
@@ -15,6 +15,8 @@ class BaseMainWindow : public QMainWindow {
 public:
     explicit BaseMainWindow(QWidget *parent = nullptr);
     ~BaseMainWindow();
+public slots:
+    void addPieceEaten(Piece *p_eaten);
 
 protected:
     Ui::MainWindow *ui;
