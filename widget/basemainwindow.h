@@ -1,5 +1,6 @@
 #ifndef BASEMAINWINDOW_H
 #define BASEMAINWINDOW_H
+#include "board.h"
 #include "engine/piece.h"
 #include "ui_basemainwindow.h"
 #include <QMainWindow>
@@ -15,10 +16,12 @@ class BaseMainWindow : public QMainWindow {
 public:
     explicit BaseMainWindow(QWidget *parent = nullptr);
     ~BaseMainWindow();
+    void bondBoardSlot();
 public slots:
     void addPieceEaten(Piece *p_eaten);
 
 protected:
+    Board *board = nullptr;
     Ui::MainWindow *ui;
 };
 

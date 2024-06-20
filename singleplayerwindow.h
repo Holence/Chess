@@ -3,7 +3,6 @@
 
 #include "replay.h"
 #include "widget/basemainwindow.h"
-#include "widget/board.h"
 
 class SinglePlayerWindow : public BaseMainWindow {
     Q_OBJECT
@@ -19,7 +18,6 @@ private slots:
 private:
     Piece_Color selfColor;
 
-    Board *board;
     Replay *replay;
 
     QAction actionResign;

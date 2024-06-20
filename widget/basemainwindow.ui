@@ -108,9 +108,21 @@
     <property name="title">
      <string>Game</string>
     </property>
+    <addaction name="actionFilp_Board"/>
    </widget>
    <addaction name="menuGame"/>
   </widget>
+  <action name="actionFilp_Board">
+   <property name="text">
+    <string>Filp Board</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+F</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>

@@ -74,8 +74,6 @@ Engine::Engine() {
             putPiece(p, pos);
         }
     }
-
-    EnPassantPawn = nullptr;
 }
 
 Engine::~Engine() {
@@ -96,9 +94,6 @@ Engine::~Engine() {
         delete BlackDeadPieces.at(i);
     }
     BlackDeadPieces.clear();
-    WhiteKing = nullptr;
-    BlackKing = nullptr;
-    EnPassantPawn = nullptr;
 }
 
 /**

@@ -21,6 +21,7 @@ SinglePlayerWindow::SinglePlayerWindow(QWidget *parent) : BaseMainWindow(parent)
     connect(board, &Board::pieceMoved, this, &SinglePlayerWindow::pieceMovedSlot);
     connect(board, &Board::pieceEaten, this, &BaseMainWindow::addPieceEaten);
     connect(board, &Board::gameEnded, this, &SinglePlayerWindow::gameEndSlot);
+    bondBoardSlot();
     ui->centerLayout->addWidget(board);
 
     // Replay

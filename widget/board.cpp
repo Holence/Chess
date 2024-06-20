@@ -53,21 +53,11 @@ Board::Board(QWidget *parent, Piece_Color selfColor, bool replayMode)
         }
     }
 
-    actionFlip_Board.setShortcut(QKeySequence(tr("Ctrl+F")));
-
-    // Flip Board
-    connect(&actionFlip_Board, &QAction::triggered, this, [this] {
-        boardFilpped = !boardFilpped;
-        drawBoard();
-        cellCanceled();
-    });
-
     if (selfColor == Piece_Color::Black)
         boardFilpped = true;
     else
         boardFilpped = false;
 
-    selectedCell = nullptr;
     drawBoard();
 }
 
@@ -96,7 +86,7 @@ void Board::flipSelfColor() {
  */
 void Board::movePiece(Position pos_from, Position pos_to, Piece_Type promoteType) {
     // 标准通信
-    selectedPiece = engine.getPiece(pos_from);
+    Piece *p_move = engine.getPiece(pos_from);
     Piece *p_eaten = engine.movePiece(pos_from, pos_to, promoteType);
     if (p_eaten) {
         emit pieceEaten(p_eaten);
@@ -107,7 +97,7 @@ void Board::movePiece(Position pos_from, Position pos_to, Piece_Type promoteType
     pos_to = translatePos(pos_to);
     updateCellIcon(pos_from);
     updateCellIcon(pos_to);
-    if (selectedPiece->getType() != Piece_Type::king) {
+    if (p_move->getType() != Piece_Type::king) {
         // 为了那狗屎的EnPassant，我也懒得设计其他接口，也不想每次都对整个棋盘全部刷新，这里额外刷新pos_from左右两侧的格子🤣
         if (pos_from.x > 1)
             updateCellIcon(Position{pos_from.x - 1, pos_from.y});
@@ -266,6 +256,12 @@ void Board::drawBoard() {
             updateCellIcon(Position{x, y});
         }
     }
+}
+
+void Board::flipBoard() {
+    boardFilpped = !boardFilpped;
+    drawBoard();
+    cellCanceled();
 }
 
 /**

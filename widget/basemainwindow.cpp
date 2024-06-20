@@ -1,5 +1,4 @@
 #include "basemainwindow.h"
-#include "board.h"
 #include <QLabel>
 
 BaseMainWindow::BaseMainWindow(QWidget *parent)
@@ -22,4 +21,8 @@ void BaseMainWindow::addPieceEaten(Piece *p_eaten) {
         label->setPixmap(QPixmap(Board::BlackIcon.value(p_eaten->getType())).scaled(25, 25, Qt::KeepAspectRatio));
         ui->horizontalLayout_black_eaten->addWidget(label);
     }
+}
+
+void BaseMainWindow::bondBoardSlot() {
+    connect(ui->actionFilp_Board, &QAction::triggered, board, &Board::flipBoard);
 }

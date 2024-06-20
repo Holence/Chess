@@ -26,14 +26,14 @@ public:
     Piece *getPiece(Position pos);
 
 private:
-    Cell *board; // board是指向Cell array的指针
+    Cell *board = nullptr; // board是指向Cell array的指针
     QList<Piece *> WhitePieces;
     QList<Piece *> WhiteDeadPieces;
     QList<Piece *> BlackPieces;
     QList<Piece *> BlackDeadPieces;
 
-    Piece *WhiteKing;
-    Piece *BlackKing;
+    Piece *WhiteKing = nullptr;
+    Piece *BlackKing = nullptr;
 
     void placePiece(Piece_Color color, bool reversed);
     void putPiece(Piece *p, Position pos);
@@ -46,7 +46,7 @@ private:
     QList<Position> getAttackingPos(Piece *p);
     QList<Position> getMovablePos(Piece *p);
 
-    Pawn *EnPassantPawn; // 之前一个State时（对手）前进两格的Pawn的Position
+    Pawn *EnPassantPawn = nullptr; // 之前一个State时（对手）前进两格的Pawn的Position
 };
 
 #endif // ENGINE_H

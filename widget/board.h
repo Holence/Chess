@@ -20,6 +20,8 @@ public:
     // Replay模式的movement、联机模式对方的move -> 传入engine
     void movePiece(Position pos_from, Position pos_to, Piece_Type promoteType);
 
+    // Ctrl+F
+    void flipBoard();
 signals:
     // 己方棋子移动后触发，外界绑定后续的操作（add replay、socket、转换到bot……）
     void pieceMoved(Position pos_from, Position pos_to, Piece_Type promoteType);
@@ -43,13 +45,13 @@ private:
     void updateCellIcon(Position pos);
     void drawBoard();
 
-    CellButton **cellArray;
+    CellButton **cellArray = nullptr;
     CellButton *getCellBtn(Position pos);
 
     Piece_Type getPawnPromotion();
 
-    CellButton *selectedCell;
-    Piece *selectedPiece;
+    CellButton *selectedCell = nullptr;
+    Piece *selectedPiece = nullptr;
     QList<CellButton *> movableCellList;
     QList<CellButton *> filteredCellList;
 

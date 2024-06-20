@@ -5,8 +5,10 @@ ReplayWindow::ReplayWindow(QWidget *parent, QString &filename) : BaseMainWindow(
 
     Replay replay = Replay(filename);
     selfColor = replay.getSelfColor();
+
     board = new Board(this, selfColor, true);
     connect(board, &Board::pieceEaten, this, &BaseMainWindow::addPieceEaten);
+    bondBoardSlot();
     ui->centerLayout->addWidget(board);
 
     actionNext_Move.setText("Next Move");

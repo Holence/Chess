@@ -3,7 +3,6 @@
 
 #include "replay.h"
 #include "widget/basemainwindow.h"
-#include "widget/board.h"
 
 class ReplayWindow : public BaseMainWindow {
 public:
@@ -13,7 +12,6 @@ public:
 private:
     Piece_Color selfColor;
 
-    Board *board;
     QList<Replay::Movement> movementList;
 
     int replayIndex;
