@@ -7,14 +7,10 @@
 
 class Replay {
 public:
-    struct Movement {
-        Position pos_from, pos_to;
-        Piece_Type promteType = Piece_Type::null;
-    };
     Replay();
     Replay(Piece_Color color);
     Replay(QString &filename);
-    void addMovement(Position pos_from, Position pos_to, Piece_Type promteType);
+    void addMovement(Movement m);
     void replaySave();
 
     Piece_Color getSelfColor();
@@ -23,7 +19,6 @@ public:
 private:
     QFile::OpenModeFlag mode;
     QList<Movement> movementList;
-    QMap<char, Piece_Type> typeMap;
     Piece_Color selfColor;
 };
 

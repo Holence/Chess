@@ -84,10 +84,13 @@ void Board::flipSelfColor() {
  * @param pos_to
  * @param promoteType
  */
-void Board::movePiece(Position pos_from, Position pos_to, Piece_Type promoteType) {
+void Board::movePiece(Movement m) {
+    Position pos_from = m.pos_from;
+    Position pos_to = m.pos_to;
+
     // 标准通信
     Piece *p_move = engine.getPiece(pos_from);
-    Piece *p_eaten = engine.movePiece(pos_from, pos_to, promoteType);
+    Piece *p_eaten = engine.movePiece(m);
     if (p_eaten) {
         emit pieceEaten(p_eaten);
     }
@@ -134,7 +137,9 @@ void Board::cellSelected(Position pos) {
             } else {
                 promoteType = Piece_Type::null;
             }
-            Piece *p_eaten = engine.movePiece(translatePos(orig_pos), translatePos(pos), promoteType);
+
+            Movement m{translatePos(orig_pos), translatePos(pos), promoteType};
+            Piece *p_eaten = engine.movePiece(m);
             if (p_eaten) {
                 emit pieceEaten(p_eaten);
             }
@@ -158,7 +163,7 @@ void Board::cellSelected(Position pos) {
             // 检查是否game over
             GameState state = engine.checkGameState(selectedPiece->getColor());
 
-            emit pieceMoved(translatePos(orig_pos), translatePos(pos), promoteType);
+            emit pieceMoved(m);
             if (state == GameState::WhiteWin or state == GameState::BlackWin or state == GameState::Draw) {
                 emit gameEnded(state);
             }
@@ -197,20 +202,22 @@ Piece_Type Board::getPawnPromotion() {
         iconMap = WhiteIcon;
     else
         iconMap = BlackIcon;
-    QDialog dlg(this);
-    dlg.setStyleSheet("QPushButton{background-color: rgba(0,0,0,0);}");
+
+    QDialog *dlg = new QDialog(this, Qt::WindowSystemMenuHint | Qt::WindowTitleHint);
+    dlg->setWindowTitle("Pawn Promotion");
+    dlg->setStyleSheet("QPushButton{background-color: rgba(0,0,0,0);}");
     QHBoxLayout layout;
     Piece_Type typeArray[] = {Piece_Type::queen, Piece_Type::rook, Piece_Type::knight, Piece_Type::bishop};
     for (int i = 0; i < 4; i++) {
-        QPushButton *b = new QPushButton(&dlg);
-        connect(b, &QPushButton::clicked, &dlg, [&, i] { dlg.done(i); });
+        QPushButton *b = new QPushButton(dlg);
+        connect(b, &QPushButton::clicked, dlg, [dlg, i] { dlg->done(i); });
         b->setIconSize(QSize(100, 100));
         b->setFixedSize(QSize(100, 100));
         b->setIcon(QIcon(iconMap.value(typeArray[i])));
         layout.addWidget(b);
     }
-    dlg.setLayout(&layout);
-    int choose = dlg.exec();
+    dlg->setLayout(&layout);
+    int choose = dlg->exec();
     return typeArray[choose];
 }
 

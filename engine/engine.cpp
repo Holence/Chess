@@ -385,7 +385,10 @@ QList<Position> Engine::getPossibleMove(Position pos) {
  * @param promoteType 如果是Pawn的Promotion，要传入对应的promoteType，否则传入Piece_Type::null
  * @return 被吃掉的棋子的指针
  */
-Piece *Engine::movePiece(Position pos_from, Position pos_to, Piece_Type promoteType) {
+Piece *Engine::movePiece(Movement m) {
+    Position pos_from = m.pos_from;
+    Position pos_to = m.pos_to;
+    Piece_Type promoteType = m.promoteType;
 
     Piece *p_from = getPiece(pos_from);
     Piece *p_to = getPiece(pos_to);

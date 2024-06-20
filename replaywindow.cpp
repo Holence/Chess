@@ -1,4 +1,5 @@
 #include "replaywindow.h"
+#include "replay.h"
 
 ReplayWindow::ReplayWindow(QWidget *parent, QString &filename) : BaseMainWindow(parent, false) {
     setWindowTitle("Replay Mode");
@@ -22,8 +23,7 @@ ReplayWindow::ReplayWindow(QWidget *parent, QString &filename) : BaseMainWindow(
 void ReplayWindow::ReplayNextMove() {
     if (replayIndex < movementList.length() - 1) {
         replayIndex++;
-        Replay::Movement m = movementList.at(replayIndex);
-        board->movePiece(m.pos_from, m.pos_to, m.promteType);
+        board->movePiece(movementList.at(replayIndex));
     }
 }
 

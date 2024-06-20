@@ -2,13 +2,6 @@
 #include <QDir>
 
 Replay::Replay() {
-    typeMap['p'] = Piece_Type::pawn;
-    typeMap['k'] = Piece_Type::king;
-    typeMap['q'] = Piece_Type::queen;
-    typeMap['r'] = Piece_Type::rook;
-    typeMap['b'] = Piece_Type::bishop;
-    typeMap['n'] = Piece_Type::knight;
-    typeMap['0'] = Piece_Type::null;
 }
 
 /**
@@ -34,29 +27,17 @@ Replay::Replay(QString &filename) : Replay() {
             selfColor = Piece_Color::Black;
         while (!stream.atEnd()) {
             QString s = stream.readLine();
-            QStringList sl = s.split(" ");
-            Movement m;
-            m.pos_from = Position::fromString(sl.at(0));
-            m.pos_to = Position::fromString(sl.at(1));
-
-            if (sl.length() == 3) {
-                m.promteType = typeMap.value(sl.at(2).at(0).unicode());
-            }
-            movementList.append(m);
+            movementList.append(Movement::fromString(s));
         }
         file.close();
     }
 }
 
-void Replay::addMovement(Position pos_from, Position pos_to, Piece_Type promteType) {
-    Movement m;
-    m.pos_from = pos_from;
-    m.pos_to = pos_to;
-    m.promteType = promteType;
+void Replay::addMovement(Movement m) {
     movementList.append(m);
 }
 
-QList<Replay::Movement> Replay::getMovementList() {
+QList<Movement> Replay::getMovementList() {
     return movementList;
 }
 
@@ -70,12 +51,7 @@ void Replay::replaySave() {
         QTextStream stream(&file);
         stream << QChar(selfColor) << "\n";
         foreach (Movement m, movementList) {
-            stream << m.pos_from.toString() << " ";
-            stream << m.pos_to.toString();
-            if (m.promteType != Piece_Type::null) {
-                stream << " " << QChar(m.promteType);
-            }
-            stream << "\n";
+            stream << Movement::toString(m) << "\n";
         }
         file.close();
     }

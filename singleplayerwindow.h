@@ -8,7 +8,7 @@ class SinglePlayerWindow : public BaseMainWindow {
 public:
     SinglePlayerWindow(QWidget *parent);
 
-private slots:
-    void pieceMovedSlot(Position pos_from, Position pos_to, Piece_Type promoteType);
+protected slots:
+    void pieceMovedSlot(Movement m);
 };
 #endif // SINGLEPLAYERWINDOW_H

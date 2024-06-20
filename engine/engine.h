@@ -19,7 +19,7 @@ public:
     Engine();
     ~Engine();
 
-    Piece *movePiece(Position from, Position to, Piece_Type promoteType);
+    Piece *movePiece(Movement m);
     GameState checkGameState(Piece_Color color);
 
     QList<Position> getPossibleMove(Position pos);

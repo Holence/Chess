@@ -19,7 +19,8 @@ public:
     explicit BaseMainWindow(QWidget *parent, bool isPlayingMode);
     ~BaseMainWindow();
     void bondBoardSlot();
-private slots:
+protected slots:
+    // void pieceMovedSlot(Movement m);
     void addPieceEaten(Piece *p_eaten);
     void gameEndSlot(GameState state);
 

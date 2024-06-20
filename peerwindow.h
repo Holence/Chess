@@ -9,13 +9,18 @@ public:
     PeerWindow(QWidget *parent, bool server);
     ~PeerWindow();
 
-private slots:
-    void pieceMovedSlot(Position pos_from, Position pos_to, Piece_Type promoteType);
+protected slots:
+    void pieceMovedSlot(Movement m);
+
+    void socketErrorSlot(QString error);
+    void receivedMovementSlot(Movement m);
 
 private:
-    bool connectSuccessed();
     bool isServer;
+    bool connectSuccessed();
     Peer *peer;
+
+    Piece_Color currentColor; // 目前轮到的颜色
 };
 
 #endif // PEERWINDOW_H

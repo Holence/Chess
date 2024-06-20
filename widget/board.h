@@ -17,17 +17,17 @@ public:
     // 单人模拟中要用
     void flipSelfColor();
 
-    // Replay模式的movement、联机模式对方的move -> 传入engine
-    void movePiece(Position pos_from, Position pos_to, Piece_Type promoteType);
+    // Replay模式的movement、联机模式对方的move -> 传入board -> 传入engine
+    void movePiece(Movement m);
 
     // Ctrl+F
     void flipBoard();
 signals:
-    // 己方棋子移动后触发，外界绑定后续的操作（add replay、socket、转换到bot……）
-    void pieceMoved(Position pos_from, Position pos_to, Piece_Type promoteType);
-    // 棋局结束后触发
+    // 己方棋子移动后触发，外界绑定后续的操作（to replay、to socket、转换到bot……）
+    void pieceMoved(Movement m);
+    // 棋局结束后触发（在basemainwindow中有默认的实现
     void gameEnded(GameState state);
-    // 棋子移动后，存在被吃掉的棋子，召唤主界面绘制
+    // 棋子移动后，存在被吃掉的棋子，召唤主界面绘制（在basemainwindow中有默认的实现
     void pieceEaten(Piece *p_eaten);
 
 private slots:

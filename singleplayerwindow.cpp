@@ -15,8 +15,8 @@ SinglePlayerWindow::SinglePlayerWindow(QWidget *parent) : BaseMainWindow(parent,
     replay = new Replay(selfColor);
 }
 
-void SinglePlayerWindow::pieceMovedSlot(Position pos_from, Position pos_to, Piece_Type promoteType) {
+void SinglePlayerWindow::pieceMovedSlot(Movement m) {
     // 单人游戏 移动棋子后更换selfColor
     board->flipSelfColor();
-    replay->addMovement(pos_from, pos_to, promoteType);
+    replay->addMovement(m);
 }
