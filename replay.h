@@ -8,11 +8,10 @@
 class Replay {
 public:
     struct Movement {
-        Movement() {}
         Position pos_from, pos_to;
         Piece_Type promteType = Piece_Type::null;
     };
-    Replay(QFile::OpenModeFlag mode);
+    Replay();
     Replay(Piece_Color color);
     Replay(QString &filename);
     void addMovement(Position pos_from, Position pos_to, Piece_Type promteType);

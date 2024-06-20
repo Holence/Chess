@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include "peerwindow.h"
 #include "replaywindow.h"
 #include "singleplayerwindow.h"
 #include <QFileDialog>
@@ -29,6 +30,18 @@ MainWindow::MainWindow(QWidget *parent)
         }
     });
     layout->addWidget(b2);
+
+    QPushButton *b3 = new QPushButton("Host Server");
+    connect(b3, &QPushButton::clicked, this, [this] {
+        new PeerWindow(this, true);
+    });
+    layout->addWidget(b3);
+
+    QPushButton *b4 = new QPushButton("Join Server");
+    connect(b4, &QPushButton::clicked, this, [this] {
+        new PeerWindow(this, false);
+    });
+    layout->addWidget(b4);
 
     centralwidget->setLayout(layout);
     setCentralWidget(centralwidget);

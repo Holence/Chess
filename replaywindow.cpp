@@ -1,13 +1,12 @@
 #include "replaywindow.h"
 
-ReplayWindow::ReplayWindow(QWidget *parent, QString &filename) : BaseMainWindow(parent) {
+ReplayWindow::ReplayWindow(QWidget *parent, QString &filename) : BaseMainWindow(parent, false) {
     setWindowTitle("Replay Mode");
 
     Replay replay = Replay(filename);
     selfColor = replay.getSelfColor();
 
-    board = new Board(this, selfColor, true);
-    connect(board, &Board::pieceEaten, this, &BaseMainWindow::addPieceEaten);
+    board = new Board(this, selfColor, false);
     bondBoardSlot();
     ui->centerLayout->addWidget(board);
 
@@ -18,10 +17,6 @@ ReplayWindow::ReplayWindow(QWidget *parent, QString &filename) : BaseMainWindow(
 
     movementList = replay.getMovementList();
     replayIndex = -1;
-}
-
-ReplayWindow::~ReplayWindow() {
-    delete board;
 }
 
 void ReplayWindow::ReplayNextMove() {

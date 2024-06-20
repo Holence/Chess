@@ -112,6 +112,7 @@
    </widget>
    <addaction name="menuGame"/>
   </widget>
+  <widget class="QStatusBar" name="statusBar"/>
   <action name="actionFilp_Board">
    <property name="text">
     <string>Filp Board</string>

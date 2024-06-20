@@ -1,4 +1,4 @@
-QT       += core gui
+QT       += core gui network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -9,6 +9,10 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    network/client.cpp \
+    network/peer.cpp \
+    network/server.cpp \
+    peerwindow.cpp \
     widget/basemainwindow.cpp \
     widget/board.cpp \
     widget/cellbutton.cpp \
@@ -28,6 +32,10 @@ SOURCES += \
     singleplayerwindow.cpp
 
 HEADERS += \
+    network/client.h \
+    network/peer.h \
+    network/server.h \
+    peerwindow.h \
     widget/basemainwindow.h \
     widget/board.h \
     widget/cellbutton.h \

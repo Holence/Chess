@@ -9,7 +9,7 @@
 class Board : public QWidget {
     Q_OBJECT
 public:
-    Board(QWidget *parent, Piece_Color selfColor, bool replayMode = false);
+    Board(QWidget *parent, Piece_Color selfColor, bool isPlayingMode = true);
     ~Board();
 
     static const QMap<Piece_Type, QString> WhiteIcon, BlackIcon;

@@ -20,7 +20,7 @@ const QMap<Piece_Type, QString> Board::BlackIcon = {
     {Piece_Type::pawn, ":/img/bp.png"},
 };
 
-Board::Board(QWidget *parent, Piece_Color selfColor, bool replayMode)
+Board::Board(QWidget *parent, Piece_Color selfColor, bool isPlayingMode)
     : QWidget(parent), engine() {
 
     this->selfColor = selfColor;
@@ -44,7 +44,7 @@ Board::Board(QWidget *parent, Piece_Color selfColor, bool replayMode)
             Position pos{x, y};
             CellButton *btn = new CellButton(pos);
             // 播放replay的话，点击棋盘不用互动
-            if (replayMode == false) {
+            if (isPlayingMode) {
                 connect(btn, &CellButton::leftClicked, this, &Board::cellSelected);
                 connect(btn, &CellButton::rightClicked, this, &Board::cellCanceled);
             }
@@ -111,7 +111,7 @@ void Board::movePiece(Position pos_from, Position pos_to, Piece_Type promoteType
     }
 
     // 检查是否game over
-    GameState state = engine.checkGameState(selfColor);
+    GameState state = engine.checkGameState(p_move->getColor());
     if (state == GameState::WhiteWin or state == GameState::BlackWin or state == GameState::Draw) {
         emit gameEnded(state);
     }
@@ -154,15 +154,15 @@ void Board::cellSelected(Position pos) {
                     updateCellIcon(Position{i, orig_pos.y});
                 }
             }
-            cellCanceled();
 
             // 检查是否game over
-            GameState state = engine.checkGameState(selfColor); // 不要把这行放到emit pieceMoved下面，因为单人模式会flipSelfColor😅
+            GameState state = engine.checkGameState(selectedPiece->getColor());
 
-            emit pieceMoved(translatePos(orig_pos), translatePos(pos), promoteType); // 不要把这行放到checkGameState上面，因为单人模式会flipSelfColor😅
+            emit pieceMoved(translatePos(orig_pos), translatePos(pos), promoteType);
             if (state == GameState::WhiteWin or state == GameState::BlackWin or state == GameState::Draw) {
                 emit gameEnded(state);
             }
+            cellCanceled();
 
         } else {
             cellCanceled();

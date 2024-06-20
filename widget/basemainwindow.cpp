@@ -1,14 +1,34 @@
 #include "basemainwindow.h"
 #include <QLabel>
+#include <QMessageBox>
 
-BaseMainWindow::BaseMainWindow(QWidget *parent)
+BaseMainWindow::BaseMainWindow(QWidget *parent, bool isPlayingMode)
     : QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
+
     setAttribute(Qt::WA_DeleteOnClose);
+
+    this->isPlayingMode = isPlayingMode;
+
+    if (isPlayingMode) {
+        actionResign.setText("Resign");
+        connect(&actionResign, &QAction::triggered, this, [this] {
+            if (selfColor == Piece_Color::White)
+                return gameEndSlot(GameState::BlackWin);
+            else
+                return gameEndSlot(GameState::WhiteWin);
+        });
+        ui->menuGame->addAction(&actionResign);
+    }
 }
 
 BaseMainWindow::~BaseMainWindow() {
     delete ui;
+    if (replay) {
+        replay->replaySave();
+        delete replay;
+    }
+    delete board;
 }
 
 void BaseMainWindow::addPieceEaten(Piece *p_eaten) {
@@ -24,5 +44,51 @@ void BaseMainWindow::addPieceEaten(Piece *p_eaten) {
 }
 
 void BaseMainWindow::bondBoardSlot() {
+    // Ctrl+F 翻转
     connect(ui->actionFilp_Board, &QAction::triggered, board, &Board::flipBoard);
+    // 有子被吃，在下面绘制
+    connect(board, &Board::pieceEaten, this, &BaseMainWindow::addPieceEaten);
+    // 结束的MessageBox
+    connect(board, &Board::gameEnded, this, &BaseMainWindow::gameEndSlot);
+}
+
+void BaseMainWindow::gameEndSlot(GameState state) {
+    if (isPlayingMode) {
+        // 保存记录
+        replay->replaySave();
+        delete replay;
+        replay = nullptr;
+        actionResign.setDisabled(true);
+    }
+
+    QString s;
+
+    switch (state) {
+    case GameState::WhiteWin:
+        if (selfColor == Piece_Color::White)
+            s = QString("You Win");
+        else
+            s = QString("You Lose");
+        break;
+    case GameState::BlackWin:
+        if (selfColor == Piece_Color::Black)
+            s = QString("You Win");
+        else
+            s = QString("You Lose");
+        break;
+    case GameState::Draw:
+        s = QString("Draw");
+        break;
+    default:
+        // Resign
+        s = QString("Resigned");
+    }
+
+    QMessageBox msg(this);
+    msg.setWindowTitle("Game Over");
+    msg.setText(s);
+    msg.adjustSize();
+    msg.exec();
+
+    board->setDisabled(true);
 }
