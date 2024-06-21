@@ -152,7 +152,7 @@ void PeerWindow::receivedResignSlot() {
 
 void PeerWindow::socketClosedSlot() {
     if (board->isEnabled()) {
-        QMessageBox::critical(this, "Critial", "Socket closed accidentally.\n(perhaps your opponent doesn't want to play with you)");
+        QMessageBox::critical(this, "Critial", "Socket closed accidentally.\n(perhaps your opponent doesn't want to play with you😥)");
     } else {
         QMessageBox::information(this, "Information", "Your opponent left the game.\n Window will close now.");
         close();

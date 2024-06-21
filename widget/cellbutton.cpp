@@ -25,5 +25,4 @@ void CellButton::mousePressEvent(QMouseEvent *e) {
     } else if (e->button() == Qt::LeftButton) {
         emit leftClicked(pos);
     }
-    QPushButton::mousePressEvent(e);
 }

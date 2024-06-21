@@ -18,7 +18,7 @@ public:
     void flipSelfColor();
 
     // Replay模式的movement、联机模式对方的move -> 传入board -> 传入engine
-    GameState movePiece(Movement m);
+    void movePiece(Movement m);
 
     // Ctrl+F
     void flipBoard();
@@ -52,8 +52,8 @@ private:
 
     CellButton *selectedCell = nullptr;
     Piece *selectedPiece = nullptr;
-    QList<CellButton *> movableCellList;
-    QList<CellButton *> filteredCellList;
+    QList<CellButton *> movableCellList; // 当前选中的棋子的可行走位
+    QList<CellButton *> traceCellList;   // 对方上一步的起点和终点
 
     Position translatePos(Position pos);
     QList<Position> translatePosList(QList<Position> posList);

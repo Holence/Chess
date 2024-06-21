@@ -84,12 +84,12 @@ void Board::flipSelfColor() {
  * @param pos_to
  * @param promoteType
  */
-GameState Board::movePiece(Movement m) {
+void Board::movePiece(Movement m) {
     Position pos_from = m.pos_from;
     Position pos_to = m.pos_to;
+    Piece *p_move = engine.getPiece(pos_from);
 
     // 标准通信
-    Piece *p_move = engine.getPiece(pos_from);
     Piece *p_eaten = engine.movePiece(m);
     if (p_eaten) {
         emit pieceEaten(p_eaten);
@@ -98,6 +98,17 @@ GameState Board::movePiece(Movement m) {
     // board需要转义过的
     pos_from = translatePos(pos_from);
     pos_to = translatePos(pos_to);
+
+    // 清空上次的痕迹
+    foreach (CellButton *btn, traceCellList) {
+        btn->clearColor();
+    }
+    traceCellList.clear();
+    // 记录走位留下的痕迹，第一个是from，第二个是to
+    traceCellList.append(getCellBtn(pos_from));
+    traceCellList.append(getCellBtn(pos_to));
+
+    // 刷新棋盘画面
     updateCellIcon(pos_from);
     updateCellIcon(pos_to);
     if (p_move->getType() != Piece_Type::king) {
@@ -118,64 +129,69 @@ GameState Board::movePiece(Movement m) {
     if (state == GameState::WhiteWin or state == GameState::BlackWin or state == GameState::Draw) {
         emit gameEnded(state);
     }
-    return state;
+
+    cellCanceled();
 }
 
 void Board::cellSelected(Position pos) {
     CellButton *current_select_btn = getCellBtn(pos);
 
-    // 之前有选中有效的棋子
-    if (selectedCell) {
-        // 如果当前点的是可行的走位，则移动棋子
+    // 之前有选中有效的棋子 且 当前点的是可行的走位，则移动棋子
+    if (selectedCell and movableCellList.contains(current_select_btn)) {
+        Position pos_from = selectedCell->getPos();
+        Position pos_to = pos;
 
-        if (movableCellList.contains(current_select_btn)) {
-            Position orig_pos = selectedCell->getPos();
-
-            Piece_Type promoteType;
-            if (selectedPiece->getType() == Piece_Type::pawn and ((Pawn *)selectedPiece)->isReadyToPromote()) {
-                // Pawn Promote
-                promoteType = getPawnPromotion();
-            } else {
-                promoteType = Piece_Type::null;
-            }
-
-            Movement m{translatePos(orig_pos), translatePos(pos), promoteType};
-            Piece *p_eaten = engine.movePiece(m);
-            if (p_eaten) {
-                emit pieceEaten(p_eaten);
-            }
-
-            // 刷新棋盘画面
-            updateCellIcon(orig_pos);
-            updateCellIcon(pos);
-            if (selectedPiece->getType() != Piece_Type::king) {
-                // 为了那狗屎的EnPassant，我也懒得设计其他接口，也不想每次都对整个棋盘全部刷新，这里额外刷新orig_pos左右两侧的格子🤣
-                if (orig_pos.x > 1)
-                    updateCellIcon(Position{orig_pos.x - 1, orig_pos.y});
-                if (orig_pos.x < 8)
-                    updateCellIcon(Position{orig_pos.x + 1, orig_pos.y});
-            } else {
-                // 还有王车易位，直接刷新一整行算了
-                for (int i = 1; i <= 8; i++) {
-                    updateCellIcon(Position{i, orig_pos.y});
-                }
-            }
-
-            // 检查是否game over
-            GameState state = engine.checkGameState(selectedPiece->getColor());
-
-            emit pieceMoved(m);
-            if (state == GameState::WhiteWin or state == GameState::BlackWin or state == GameState::Draw) {
-                emit gameEnded(state);
-            }
-            cellCanceled();
-
+        Piece_Type promoteType;
+        if (selectedPiece->getType() == Piece_Type::pawn and ((Pawn *)selectedPiece)->isReadyToPromote()) {
+            // Pawn Promote
+            promoteType = getPawnPromotion();
         } else {
-            cellCanceled();
+            promoteType = Piece_Type::null;
         }
+
+        Movement m{translatePos(pos_from), translatePos(pos_to), promoteType};
+        Piece *p_eaten = engine.movePiece(m);
+        if (p_eaten) {
+            emit pieceEaten(p_eaten);
+        }
+
+        // 清空上次的痕迹
+        foreach (CellButton *btn, traceCellList) {
+            btn->clearColor();
+        }
+        traceCellList.clear();
+        // 记录走位留下的痕迹，第一个是from，第二个是to
+        traceCellList.append(getCellBtn(pos_from));
+        traceCellList.append(current_select_btn);
+
+        // 刷新棋盘画面
+        updateCellIcon(pos_from);
+        updateCellIcon(pos_to);
+        if (selectedPiece->getType() != Piece_Type::king) {
+            // 为了那狗屎的EnPassant，我也懒得设计其他接口，也不想每次都对整个棋盘全部刷新，这里额外刷新pos_from左右两侧的格子🤣
+            if (pos_from.x > 1)
+                updateCellIcon(Position{pos_from.x - 1, pos_from.y});
+            if (pos_from.x < 8)
+                updateCellIcon(Position{pos_from.x + 1, pos_from.y});
+        } else {
+            // 还有王车易位，直接刷新一整行算了
+            for (int i = 1; i <= 8; i++) {
+                updateCellIcon(Position{i, pos_from.y});
+            }
+        }
+
+        // 检查是否game over
+        GameState state = engine.checkGameState(selectedPiece->getColor());
+
+        emit pieceMoved(m);
+        if (state == GameState::WhiteWin or state == GameState::BlackWin or state == GameState::Draw) {
+            emit gameEnded(state);
+        }
+        cellCanceled();
     }
-    //
+    // 否则尝试展示可行的走位
     else {
+        cellCanceled();
         selectedPiece = engine.getPiece(translatePos(pos));
         // 如果选中棋子 且 选中了己方的棋子
         if (selectedPiece and selectedPiece->getColor() == selfColor) {
@@ -187,9 +203,9 @@ void Board::cellSelected(Position pos) {
             } else {
                 selectedCell = current_select_btn;
                 foreach (Position pos, l) {
-                    // 标为黄色
+                    // 标为绿色
                     CellButton *btn = getCellBtn(pos);
-                    btn->paintColor(255, 255, 0, 63);
+                    btn->paintColor(0, 255, 0, 63);
                     movableCellList.append(btn);
                 }
             }
@@ -224,15 +240,18 @@ Piece_Type Board::getPawnPromotion() {
 
 void Board::cellCanceled() {
     if (selectedCell) {
+        selectedCell = nullptr;
+
         foreach (CellButton *btn, movableCellList) {
             btn->clearColor();
         }
         movableCellList.clear();
-        foreach (CellButton *btn, filteredCellList) {
-            btn->clearColor();
-        }
-        filteredCellList.clear();
-        selectedCell = nullptr;
+    }
+    int a = 63;
+    foreach (CellButton *btn, traceCellList) {
+        // 标为黄色
+        btn->paintColor(255, 255, 0, a);
+        a += 64;
     }
 }
 
@@ -269,6 +288,17 @@ void Board::drawBoard() {
 void Board::flipBoard() {
     boardFilpped = !boardFilpped;
     drawBoard();
+
+    // 翻转后指向的btn也要翻转
+    if (!traceCellList.isEmpty()) {
+        QList<CellButton *> traceCellList_copy = traceCellList;
+        traceCellList.clear();
+        foreach (CellButton *btn, traceCellList_copy) {
+            btn->clearColor();
+            traceCellList.append(getCellBtn(btn->getPos().flipSide()));
+        }
+    }
+
     cellCanceled();
 }
 
