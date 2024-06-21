@@ -16,6 +16,7 @@ public:
     void sendMovement(Movement m);
     void sendResign();
     void sendMessage(QString s);
+    void sendTaunt(QString country, int i);
 
     Piece_Color getSelfColor();
 
@@ -27,6 +28,7 @@ signals:
     void receivedMovement(Movement m);
     void receivedResign();
     void receivedMessage(QString s);
+    void receivedTaunt(QString country, int i);
 public slots:
     void setSelfColor(Piece_Color color);
 

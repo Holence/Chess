@@ -24,6 +24,10 @@ void Peer::sendMessage(QString s) {
     handleDataOut("2" + s);
 }
 
+void Peer::sendTaunt(QString country, int i) {
+    handleDataOut("3" + country + " " + QString::number(i));
+}
+
 void Peer::handleDataIn() {
     QString s = QString::fromUtf8(tcpSocket->readAll());
     QString op = s.mid(1);
@@ -52,6 +56,9 @@ void Peer::handleDataIn() {
         break;
     case 2:
         emit receivedMessage(op);
+        break;
+    case 3:
+        emit receivedTaunt(op.split(" ").at(0), op.split(" ").at(1).toInt());
         break;
     case 9:
         emit receivedResign();

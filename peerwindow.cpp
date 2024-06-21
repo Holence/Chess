@@ -7,6 +7,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QMessageBox>
+#include <QRandomGenerator>
 
 PeerWindow::PeerWindow(QWidget *parent, bool isServer) : BaseMainWindow(parent, true) {
     setWindowTitle("Online Play Mode");
@@ -18,11 +19,14 @@ PeerWindow::PeerWindow(QWidget *parent, bool isServer) : BaseMainWindow(parent, 
         return;
     }
 
+    connect(peer, &Peer::socketClosed, this, &PeerWindow::socketClosedSlot);
     ui->statusBar->showMessage(peer->getConnectionInfo());
 
     selfColor = peer->getSelfColor();
     board = new Board(this, selfColor, true);
     connect(board, &Board::pieceMoved, this, &PeerWindow::pieceMovedSlot);
+    bondBoardSlot();
+    ui->centerLayout->addWidget(board);
 
     // 另外绑定到通知对方
     disconnect(actionResign, nullptr, nullptr, nullptr);
@@ -36,9 +40,6 @@ PeerWindow::PeerWindow(QWidget *parent, bool isServer) : BaseMainWindow(parent, 
             return BaseMainWindow::gameEndSlot(GameState::WhiteWin);
     });
 
-    bondBoardSlot();
-    ui->centerLayout->addWidget(board);
-
     replay = new Replay(selfColor);
 
     currentColor = Piece_Color::White;
@@ -47,13 +48,25 @@ PeerWindow::PeerWindow(QWidget *parent, bool isServer) : BaseMainWindow(parent, 
     connect(peer, &Peer::receivedMovement, this, &PeerWindow::receivedMovementSlot);
     connect(peer, &Peer::receivedResign, this, &PeerWindow::receivedResignSlot);
 
+    // Chatbox
     chatbox = new ChatBox("Chat Box", this);
     connect(chatbox, &ChatBox::sendMessage, peer, &Peer::sendMessage);
     connect(peer, &Peer::receivedMessage, chatbox, &ChatBox::receivedMessage);
 
     // 其他的错误信息就写在chatbox中
-    connect(peer, &Peer::socketClosed, this, &PeerWindow::socketClosedSlot);
     connect(peer, &Peer::socketError, chatbox, &ChatBox::receivedMessage);
+
+    // Taunt
+    QList<QString> countryList = {"am", "br", "cu", "fr", "ge", "ir", "ko", "li", "ru", "yu"};
+    tauntCountry = countryList[QRandomGenerator::global()->bounded(countryList.length())];
+    for (int i = 0; i < 8; i++) {
+        QAction *a = new QAction(this);
+        a->setShortcut(QKeySequence("F" + QString::number(i + 1)));
+        connect(a, &QAction::triggered, this, [this, i] { playTaunt(tauntCountry, i + 1); });
+        connect(a, &QAction::triggered, peer, [this, i] { peer->sendTaunt(tauntCountry, i + 1); });
+        addAction(a);
+    }
+    connect(peer, &Peer::receivedTaunt, this, &PeerWindow::playTaunt);
 
     show();
 }
@@ -128,6 +141,10 @@ bool PeerWindow::connectDialog() {
         delete dlg;
         return true;
     }
+}
+
+void PeerWindow::playTaunt(QString country, int i) {
+    board->playMedia("qrc:/taunt/" + country + "0" + QString::number(i) + ".wav");
 }
 
 void PeerWindow::pieceMovedSlot(Movement m) {

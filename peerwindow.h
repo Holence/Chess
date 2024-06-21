@@ -25,6 +25,10 @@ private:
     bool connectDialog();
     Peer *peer;
     Piece_Color currentColor; // 目前轮到的颜色
+
+    QString tauntCountry;
+    QList<QAction *> tauntActionList;
+    void playTaunt(QString country, int i);
 };
 
 #endif // PEERWINDOW_H
