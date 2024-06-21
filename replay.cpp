@@ -1,6 +1,6 @@
 #include "replay.h"
+#include <QDateTime>
 #include <QDir>
-
 Replay::Replay() {
 }
 
@@ -46,7 +46,7 @@ void Replay::replaySave() {
     if (!dir.exists("./replay")) {
         dir.mkdir("./replay");
     }
-    QFile file("./replay/aaa.rep");
+    QFile file("./replay/" + QDateTime::currentDateTime().toString("[yyyy.MM.dd] hh-mm-ss") + ".rep");
     if (file.open(QFile::WriteOnly)) {
         QTextStream stream(&file);
         stream << QChar(selfColor) << "\n";

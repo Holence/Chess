@@ -4,6 +4,7 @@
 #include "cellbutton.h"
 #include "engine/engine.h"
 #include <QAction>
+#include <QMediaPlayer>
 #include <QWidget>
 
 class Board : public QWidget {
@@ -22,6 +23,8 @@ public:
 
     // Ctrl+F
     void flipBoard();
+
+    void playMedia(QString path);
 signals:
     // 己方棋子移动后触发，外界绑定后续的操作（to replay、to socket、转换到bot……）
     void pieceMoved(Movement m);
@@ -57,6 +60,8 @@ private:
 
     Position translatePos(Position pos);
     QList<Position> translatePosList(QList<Position> posList);
+
+    QMediaPlayer *mediaPlayer;
 };
 
 #endif // BOARD_H

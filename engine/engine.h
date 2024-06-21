@@ -25,6 +25,8 @@ public:
     QList<Position> getPossibleMove(Position pos);
     Piece *getPiece(Position pos);
 
+    bool getBeingCheckmated();
+
 private:
     Cell *board = nullptr; // board是指向Cell array的指针
     QList<Piece *> WhitePieces;
@@ -34,6 +36,7 @@ private:
 
     Piece *WhiteKing = nullptr;
     Piece *BlackKing = nullptr;
+    bool beingCheckmated = false;
 
     void placePiece(Piece_Color color, bool reversed);
     void putPiece(Piece *p, Position pos);

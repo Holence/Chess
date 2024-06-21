@@ -58,7 +58,11 @@ Board::Board(QWidget *parent, Piece_Color selfColor, bool isPlayingMode)
     else
         boardFilpped = false;
 
+    mediaPlayer = new QMediaPlayer(this);
+
     drawBoard();
+
+    playMedia("qrc:/sound/game-start.mp3");
 }
 
 Board::~Board() {
@@ -88,10 +92,16 @@ void Board::movePiece(Movement m) {
     Position pos_from = m.pos_from;
     Position pos_to = m.pos_to;
     Piece *p_move = engine.getPiece(pos_from);
+    QString media_path("");
+
+    if (m.promoteType != Piece_Type::null) {
+        media_path = "qrc:/sound/promote.mp3";
+    }
 
     // 标准通信
     Piece *p_eaten = engine.movePiece(m);
     if (p_eaten) {
+        media_path = "qrc:/sound/capture.mp3";
         emit pieceEaten(p_eaten);
     }
 
@@ -122,10 +132,23 @@ void Board::movePiece(Movement m) {
         for (int i = 1; i <= 8; i++) {
             updateCellIcon(Position{i, pos_from.y});
         }
+        // 王车易位
+        if (std::abs(pos_to.x - pos_from.x) == 2) {
+            media_path = "qrc:/sound/castle.mp3";
+        }
     }
 
     // 检查是否game over
     GameState state = engine.checkGameState(p_move->getColor());
+    if (engine.getBeingCheckmated()) {
+        media_path = "qrc:/sound/move-check.mp3";
+    }
+
+    if (media_path.isEmpty()) {
+        media_path = "qrc:/sound/move-opponent.mp3";
+    }
+
+    playMedia(media_path);
     if (state == GameState::WhiteWin or state == GameState::BlackWin or state == GameState::Draw) {
         emit gameEnded(state);
     }
@@ -135,6 +158,7 @@ void Board::movePiece(Movement m) {
 
 void Board::cellSelected(Position pos) {
     CellButton *current_select_btn = getCellBtn(pos);
+    QString media_path("");
 
     // 之前有选中有效的棋子 且 当前点的是可行的走位，则移动棋子
     if (selectedCell and movableCellList.contains(current_select_btn)) {
@@ -145,6 +169,7 @@ void Board::cellSelected(Position pos) {
         if (selectedPiece->getType() == Piece_Type::pawn and ((Pawn *)selectedPiece)->isReadyToPromote()) {
             // Pawn Promote
             promoteType = getPawnPromotion();
+            media_path = "qrc:/sound/promote.mp3";
         } else {
             promoteType = Piece_Type::null;
         }
@@ -152,6 +177,7 @@ void Board::cellSelected(Position pos) {
         Movement m{translatePos(pos_from), translatePos(pos_to), promoteType};
         Piece *p_eaten = engine.movePiece(m);
         if (p_eaten) {
+            media_path = "qrc:/sound/capture.mp3";
             emit pieceEaten(p_eaten);
         }
 
@@ -178,10 +204,22 @@ void Board::cellSelected(Position pos) {
             for (int i = 1; i <= 8; i++) {
                 updateCellIcon(Position{i, pos_from.y});
             }
+            // 王车易位
+            if (std::abs(pos_to.x - pos_from.x) == 2) {
+                media_path = "qrc:/sound/castle.mp3";
+            }
         }
 
         // 检查是否game over
         GameState state = engine.checkGameState(selectedPiece->getColor());
+        if (engine.getBeingCheckmated()) {
+            media_path = "qrc:/sound/move-check.mp3";
+        }
+
+        if (media_path.isEmpty()) {
+            media_path = "qrc:/sound/move-self.mp3";
+        }
+        playMedia(media_path);
 
         emit pieceMoved(m);
         if (state == GameState::WhiteWin or state == GameState::BlackWin or state == GameState::Draw) {
@@ -330,4 +368,9 @@ QList<Position> Board::translatePosList(QList<Position> posList) {
         l.append(translatePos(pos));
     }
     return l;
+}
+
+void Board::playMedia(QString path) {
+    mediaPlayer->setMedia(QUrl(path));
+    mediaPlayer->play();
 }

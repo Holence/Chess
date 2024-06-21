@@ -3,7 +3,6 @@
 SinglePlayerWindow::SinglePlayerWindow(QWidget *parent) : BaseMainWindow(parent, true) {
     setWindowTitle("Single Player Mode");
 
-    // TODO select color box
     selfColor = Piece_Color::White;
 
     board = new Board(this, selfColor, true);

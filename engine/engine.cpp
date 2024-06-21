@@ -119,7 +119,7 @@ GameState Engine::checkGameState(Piece_Color color) {
         WinState = GameState::BlackWin;
     }
 
-    bool beingCheckmated = isBeingCheckmated(oppColor);
+    beingCheckmated = isBeingCheckmated(oppColor);
     bool hasMoveChance = false;
     foreach (Piece *p, l) {
         if (!getMovablePos(p).isEmpty()) {
@@ -276,7 +276,7 @@ QList<Position> Engine::getMovablePos(Piece *p) {
 
         // 王车易位
         // 王没动过 且 没被将军
-        if (((King *)p)->getMoved() == false and !isBeingCheckmated(pieceColor)) {
+        if (((King *)p)->getMoved() == false and !beingCheckmated) {
             // 左边的车
             // 左边三格都空
             if (!getPiece(Position{piecePos.x - 1, piecePos.y}) and !getPiece(Position{piecePos.x - 2, piecePos.y}) and !getPiece(Position{piecePos.x - 3, piecePos.y})) {
@@ -496,6 +496,10 @@ Piece *Engine::movePiece(Movement m) {
 
 Piece *Engine::getPiece(Position pos) {
     return board[pos.toIndex()];
+}
+
+bool Engine::getBeingCheckmated() {
+    return beingCheckmated;
 }
 
 /**

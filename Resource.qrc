@@ -13,5 +13,13 @@
         <file>img/wp.png</file>
         <file>img/wq.png</file>
         <file>img/wr.png</file>
+        <file>sound/capture.mp3</file>
+        <file>sound/castle.mp3</file>
+        <file>sound/game-end.mp3</file>
+        <file>sound/game-start.mp3</file>
+        <file>sound/move-check.mp3</file>
+        <file>sound/move-self.mp3</file>
+        <file>sound/promote.mp3</file>
+        <file>sound/move-opponent.mp3</file>
     </qresource>
 </RCC>

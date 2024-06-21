@@ -8,8 +8,6 @@
 #include <QLineEdit>
 #include <QMessageBox>
 
-// TODO Initialize Pack: Name PieceColor
-// TODO Chat
 PeerWindow::PeerWindow(QWidget *parent, bool isServer) : BaseMainWindow(parent, true) {
     setWindowTitle("Online Play Mode");
 

@@ -62,6 +62,8 @@ void BaseMainWindow::gameEndSlot(GameState state) {
         actionResign->setDisabled(true);
     }
 
+    board->playMedia("qrc:/sound/game-end.mp3");
+
     QString s;
 
     switch (state) {
