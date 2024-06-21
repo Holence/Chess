@@ -18,7 +18,7 @@ public:
     void flipSelfColor();
 
     // Replay模式的movement、联机模式对方的move -> 传入board -> 传入engine
-    void movePiece(Movement m);
+    GameState movePiece(Movement m);
 
     // Ctrl+F
     void flipBoard();

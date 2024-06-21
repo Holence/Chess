@@ -31,7 +31,7 @@ protected:
     Replay *replay = nullptr;
     Piece_Color selfColor;
     Board *board = nullptr;
-    QAction actionResign;
+    QAction *actionResign;
 };
 
 #endif // BASEMAINWINDOW_H

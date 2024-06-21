@@ -84,7 +84,7 @@ void Board::flipSelfColor() {
  * @param pos_to
  * @param promoteType
  */
-void Board::movePiece(Movement m) {
+GameState Board::movePiece(Movement m) {
     Position pos_from = m.pos_from;
     Position pos_to = m.pos_to;
 
@@ -118,6 +118,7 @@ void Board::movePiece(Movement m) {
     if (state == GameState::WhiteWin or state == GameState::BlackWin or state == GameState::Draw) {
         emit gameEnded(state);
     }
+    return state;
 }
 
 void Board::cellSelected(Position pos) {

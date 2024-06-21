@@ -14,12 +14,14 @@ protected slots:
 
     void socketErrorSlot(QString error);
     void receivedMovementSlot(Movement m);
+    void receivedResignSlot();
+
+    void gameEndSlot(GameState state);
 
 private:
     bool isServer;
-    bool connectSuccessed();
+    bool connectDialog();
     Peer *peer;
-
     Piece_Color currentColor; // 目前轮到的颜色
 };
 

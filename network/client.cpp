@@ -7,12 +7,12 @@ Client::Client(QObject *parent) : Peer{parent} {
         emit socketError(tcpSocket->errorString());
     });
     connect(tcpSocket, &QTcpSocket::readyRead, this, &Client::handleDataIn);
-    connect(tcpSocket, &QTcpSocket::connected, this, &Client::connectSuccessed);
 }
 
 int Client::getPort() {
     return tcpSocket->localPort();
 }
+
 void Client::connectToServer(QString &hostName, quint16 port) {
     tcpSocket->connectToHost(hostName, port);
 }
