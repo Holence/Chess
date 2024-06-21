@@ -29,7 +29,8 @@ SOURCES += \
     mainwindow.cpp \
     replay.cpp \
     replaywindow.cpp \
-    singleplayerwindow.cpp
+    singleplayerwindow.cpp \
+    widget/chatbox.cpp
 
 HEADERS += \
     network/client.h \
@@ -51,7 +52,8 @@ HEADERS += \
     mainwindow.h \
     replay.h \
     replaywindow.h \
-    singleplayerwindow.h
+    singleplayerwindow.h \
+    widget/chatbox.h
 
 FORMS += \
     widget/basemainwindow.ui

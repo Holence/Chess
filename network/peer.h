@@ -9,27 +9,32 @@ class Peer : public QObject {
     Q_OBJECT
 public:
     explicit Peer(QObject *parent = nullptr);
-    virtual int getPort() = 0;
+    QString getConnectionInfo();
 
     void disconnectSocket();
 
     void sendMovement(Movement m);
     void sendResign();
+    void sendMessage(QString s);
 
     Piece_Color getSelfColor();
 
 signals:
     void socketError(QString error);
+    void socketClosed();
     void connectionSuccessed();
 
     void receivedMovement(Movement m);
     void receivedResign();
+    void receivedMessage(QString s);
 public slots:
     void setSelfColor(Piece_Color color);
 
 protected:
-    bool initialized = false;
+    bool isServer;
     Piece_Color selfColor;
+    void bondSocketSignalSlot();
+    void sendInializePack();
     void handleDataIn();
     void handleDataOut(QString s);
     QTcpServer *tcpServer = nullptr;

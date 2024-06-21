@@ -3,6 +3,7 @@
 #include "network/server.h"
 #include <QComboBox>
 #include <QDialog>
+#include <QDockWidget>
 #include <QLabel>
 #include <QLineEdit>
 #include <QMessageBox>
@@ -19,18 +20,17 @@ PeerWindow::PeerWindow(QWidget *parent, bool isServer) : BaseMainWindow(parent, 
         return;
     }
 
+    ui->statusBar->showMessage(peer->getConnectionInfo());
+
     selfColor = peer->getSelfColor();
     board = new Board(this, selfColor, true);
     connect(board, &Board::pieceMoved, this, &PeerWindow::pieceMovedSlot);
-    // 另外绑定到关闭socket
-    connect(board, &Board::gameEnded, peer, &Peer::disconnectSocket);
 
     // 另外绑定到通知对方
     disconnect(actionResign, nullptr, nullptr, nullptr);
     connect(actionResign, &QAction::triggered, peer, [this] {
         // 让先通信
         peer->sendResign();
-        peer->disconnectSocket();
         // 再gameEndSlot
         if (selfColor == Piece_Color::White)
             return BaseMainWindow::gameEndSlot(GameState::BlackWin);
@@ -46,9 +46,16 @@ PeerWindow::PeerWindow(QWidget *parent, bool isServer) : BaseMainWindow(parent, 
     currentColor = Piece_Color::White;
     board->setAttribute(Qt::WA_TransparentForMouseEvents, currentColor != selfColor);
 
-    connect(peer, &Peer::socketError, this, &PeerWindow::socketErrorSlot);
     connect(peer, &Peer::receivedMovement, this, &PeerWindow::receivedMovementSlot);
     connect(peer, &Peer::receivedResign, this, &PeerWindow::receivedResignSlot);
+
+    chatbox = new ChatBox("Chat Box", this);
+    connect(chatbox, &ChatBox::sendMessage, peer, &Peer::sendMessage);
+    connect(peer, &Peer::receivedMessage, chatbox, &ChatBox::receivedMessage);
+
+    // 其他的错误信息就写在chatbox中
+    connect(peer, &Peer::socketClosed, this, &PeerWindow::socketClosedSlot);
+    connect(peer, &Peer::socketError, chatbox, &ChatBox::receivedMessage);
 
     show();
 }
@@ -140,10 +147,14 @@ void PeerWindow::receivedMovementSlot(Movement m) {
 }
 
 void PeerWindow::receivedResignSlot() {
-    peer->disconnectSocket();
     BaseMainWindow::gameEndSlot(GameState::Unfinished);
 }
 
-void PeerWindow::socketErrorSlot(QString error) {
-    QMessageBox::critical(this, "Critial", error);
+void PeerWindow::socketClosedSlot() {
+    if (board->isEnabled()) {
+        QMessageBox::critical(this, "Critial", "Socket closed accidentally.\n(perhaps your opponent doesn't want to play with you)");
+    } else {
+        QMessageBox::information(this, "Information", "Your opponent left the game.\n Window will close now.");
+        close();
+    }
 }

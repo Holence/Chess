@@ -3,6 +3,7 @@
 
 #include "network/peer.h"
 #include "widget/basemainwindow.h"
+#include "widget/chatbox.h"
 
 class PeerWindow : public BaseMainWindow {
 public:
@@ -12,13 +13,14 @@ public:
 protected slots:
     void pieceMovedSlot(Movement m);
 
-    void socketErrorSlot(QString error);
+    void socketClosedSlot();
     void receivedMovementSlot(Movement m);
     void receivedResignSlot();
 
     void gameEndSlot(GameState state);
 
 private:
+    ChatBox *chatbox;
     bool isServer;
     bool connectDialog();
     Peer *peer;

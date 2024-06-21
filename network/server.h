@@ -6,7 +6,6 @@ class Server : public Peer {
     Q_OBJECT
 public:
     Server(QObject *parent);
-    int getPort();
 
 private:
     void connectToPeer();
