@@ -261,7 +261,7 @@ Piece_Type Board::getPawnPromotion() {
     QDialog *dlg = new QDialog(this, Qt::WindowSystemMenuHint | Qt::WindowTitleHint);
     dlg->setWindowTitle("Pawn Promotion");
     dlg->setStyleSheet("QPushButton{background-color: rgba(0,0,0,0);}");
-    QHBoxLayout layout;
+    QHBoxLayout *layout = new QHBoxLayout();
     Piece_Type typeArray[] = {Piece_Type::queen, Piece_Type::rook, Piece_Type::knight, Piece_Type::bishop};
     for (int i = 0; i < 4; i++) {
         QPushButton *b = new QPushButton(dlg);
@@ -269,9 +269,9 @@ Piece_Type Board::getPawnPromotion() {
         b->setIconSize(QSize(100, 100));
         b->setFixedSize(QSize(100, 100));
         b->setIcon(QIcon(iconMap.value(typeArray[i])));
-        layout.addWidget(b);
+        layout->addWidget(b);
     }
-    dlg->setLayout(&layout);
+    dlg->setLayout(layout);
     int choose = dlg->exec();
     return typeArray[choose];
 }

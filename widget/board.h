@@ -38,8 +38,6 @@ private slots:
     void cellCanceled();
 
 private:
-    QAction actionFlip_Board;
-
     Engine engine;
 
     Piece_Color selfColor;

@@ -16,8 +16,7 @@ MainWindow::MainWindow(QWidget *parent)
     QVBoxLayout *layout = new QVBoxLayout();
     QPushButton *b1 = new QPushButton("Single Player Mode");
     connect(b1, &QPushButton::clicked, this, [this] {
-        SinglePlayerWindow *w = new SinglePlayerWindow(this);
-        w->show();
+        (new SinglePlayerWindow(this))->show();
     });
     layout->addWidget(b1);
 
@@ -25,8 +24,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(b2, &QPushButton::clicked, this, [this] {
         QString filename = QFileDialog::getOpenFileName(this, "Open Replay File", "./replay", "Replay (*.rep)");
         if (!filename.isEmpty()) {
-            ReplayWindow *w = new ReplayWindow(this, filename);
-            w->show();
+            (new ReplayWindow(this, filename))->show();
         }
     });
     layout->addWidget(b2);
