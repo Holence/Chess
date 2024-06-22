@@ -5,6 +5,11 @@ Server::Server(QObject *parent) : Peer{parent} {
     tcpServer = new QTcpServer(parent);
     tcpServer->listen(QHostAddress::Any, 11451);
     connect(tcpServer, &QTcpServer::newConnection, this, &Server::connectToPeer);
+
+    // server会每隔5秒向client发时间戳，client需要回复，这样双方能计算通信的delay
+    timer = new QTimer(this);
+    timer->setInterval(5 * 1000);
+    connect(timer, &QTimer::timeout, this, &Peer::sendTime);
 }
 
 void Server::connectToPeer() {

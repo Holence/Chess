@@ -6,7 +6,6 @@
 BaseMainWindow::BaseMainWindow(QWidget *parent, bool isPlayingMode)
     : QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
-    setFixedSize(800, 846);
 
     // move to center of screen
     move(pos() + (QGuiApplication::primaryScreen()->geometry().center() - geometry().center()));

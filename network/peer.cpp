@@ -1,7 +1,9 @@
 #include "peer.h"
+#include <QDateTime>
 
 Peer::Peer(QObject *parent)
-    : QObject{parent} {}
+    : QObject{parent} {
+}
 
 QString Peer::getConnectionInfo() {
     return tcpSocket->localAddress().toString() + ":" + QString::number(tcpSocket->localPort()) + " -> " + tcpSocket->peerAddress().toString() + ":" + QString::number(tcpSocket->peerPort());
@@ -13,7 +15,7 @@ void Peer::disconnectSocket() {
 }
 
 void Peer::sendMovement(Movement m) {
-    handleDataOut("1" + Movement::toString(m));
+    handleDataOut("5" + Movement::toString(m));
 }
 
 void Peer::sendResign() {
@@ -21,11 +23,15 @@ void Peer::sendResign() {
 }
 
 void Peer::sendMessage(QString s) {
-    handleDataOut("2" + s);
+    handleDataOut("8" + s);
 }
 
 void Peer::sendTaunt(QString country, int i) {
-    handleDataOut("3" + country + " " + QString::number(i));
+    handleDataOut("7" + country + " " + QString::number(i));
+}
+
+void Peer::sendTime() {
+    handleDataOut("1" + QString::number(QDateTime::currentMSecsSinceEpoch()));
 }
 
 void Peer::handleDataIn() {
@@ -46,19 +52,32 @@ void Peer::handleDataIn() {
             // server收到颜色确认
             if (op == selfColor) {
                 emit connectionSuccessed();
+                // server开启timer
+                timer->start();
+                sendTime();
             } else {
                 emit socketError("Color not match!!!");
             }
         }
         break;
     case 1:
+        if (!isServer) {
+            // client收到server发来的时间戳，向server返回自己的时间
+            sendTime();
+            emit receivedTime(QDateTime::currentMSecsSinceEpoch() - op.toLongLong());
+        } else {
+            // 收到client的时间戳，结束
+            emit receivedTime(QDateTime::currentMSecsSinceEpoch() - op.toLongLong());
+        }
+        break;
+    case 5:
         emit receivedMovement(Movement::fromString(op));
         break;
-    case 2:
-        emit receivedMessage(op);
-        break;
-    case 3:
+    case 7:
         emit receivedTaunt(op.split(" ").at(0), op.split(" ").at(1).toInt());
+        break;
+    case 8:
+        emit receivedMessage(op);
         break;
     case 9:
         emit receivedResign();

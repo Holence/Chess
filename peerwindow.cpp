@@ -11,6 +11,7 @@
 
 PeerWindow::PeerWindow(QWidget *parent, bool isServer) : BaseMainWindow(parent, true) {
     setWindowTitle("Online Play Mode");
+    setFixedSize(800, 862);
 
     this->isServer = isServer;
 
@@ -66,6 +67,19 @@ PeerWindow::PeerWindow(QWidget *parent, bool isServer) : BaseMainWindow(parent, 
         addAction(a);
     }
     connect(peer, &Peer::receivedTaunt, this, &PeerWindow::playTaunt);
+
+    // Delay
+    connect(peer, &Peer::receivedTime, this, [this](int delay) {
+        ui->label_info->setText(peer->getConnectionInfo() + " | Delay: ");
+        ui->label_delay->setText(QString::number(delay) + "ms");
+        if (delay < 100) {
+            ui->label_delay->setStyleSheet("color: rgb(0,255,0)");
+        } else if (delay < 200) {
+            ui->label_delay->setStyleSheet("color: rgb(255,255,0)");
+        } else {
+            ui->label_delay->setStyleSheet("color: rgb(255,0,0)");
+        }
+    });
 
     show();
 }

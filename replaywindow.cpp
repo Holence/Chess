@@ -3,6 +3,8 @@
 
 ReplayWindow::ReplayWindow(QWidget *parent, QString &filename) : BaseMainWindow(parent, false) {
     setWindowTitle("Replay Mode");
+    setFixedSize(800, 846);
+    ui->statusBar->hide();
 
     Replay replay = Replay(filename);
     selfColor = replay.getSelfColor();

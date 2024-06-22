@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QTcpServer>
 #include <QTcpSocket>
+#include <QTimer>
 
 class Peer : public QObject {
     Q_OBJECT
@@ -17,6 +18,7 @@ public:
     void sendResign();
     void sendMessage(QString s);
     void sendTaunt(QString country, int i);
+    void sendTime();
 
     Piece_Color getSelfColor();
 
@@ -29,6 +31,7 @@ signals:
     void receivedResign();
     void receivedMessage(QString s);
     void receivedTaunt(QString country, int i);
+    void receivedTime(int delay);
 public slots:
     void setSelfColor(Piece_Color color);
 
@@ -41,6 +44,7 @@ protected:
     void handleDataOut(QString s);
     QTcpServer *tcpServer = nullptr;
     QTcpSocket *tcpSocket = nullptr;
+    QTimer *timer;
 };
 
 #endif // PEER_H

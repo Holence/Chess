@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>800</width>
-    <height>846</height>
+    <height>862</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,11 +17,11 @@
    <property name="maximumSize">
     <size>
      <width>800</width>
-     <height>825</height>
+     <height>841</height>
     </size>
    </property>
    <property name="styleSheet">
-    <string notr="true">#centralwidget {background-color: rgb(112, 80, 56);}</string>
+    <string notr="true">#centralwidget {background-color: rgb(105, 75, 51)}</string>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
     <property name="spacing">
@@ -92,6 +92,69 @@
        </layout>
       </item>
      </layout>
+    </item>
+    <item>
+     <widget class="QWidget" name="statusBar" native="true">
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>16</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>16</height>
+       </size>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color: rgb(96, 67, 44);
+font-size: 12px;</string>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_status">
+       <property name="spacing">
+        <number>0</number>
+       </property>
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="label_info">
+         <property name="styleSheet">
+          <string notr="true">color: rgb(255, 255, 255);</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_delay">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="styleSheet">
+          <string notr="true"/>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
     </item>
    </layout>
   </widget>
