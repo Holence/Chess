@@ -519,7 +519,7 @@ void Engine::clearPos(Position pos) {
 /**
  * 计算某个位置被某方棋子施加的“压力”（被保护程度）
  * @param pos
- * @param color
+ * @param color 施加压力的某方
  * @return
  */
 int Engine::caclPressure(Position pos, Piece_Color color) {
@@ -540,11 +540,11 @@ int Engine::caclPressure(Position pos, Piece_Color color) {
 }
 
 /**
- * 计算某个位置被某方棋子，是否存在施加的“压力”（被保护程度）
+ * 计算某个位置被某方棋子，是否存在施加的“压力”
  *
  * 逻辑和caclPressure一样，只不过可以早退
  * @param pos
- * @param color
+ * @param color 施加压力的某方
  * @return
  */
 bool Engine::hasPressure(Position pos, Piece_Color color) {
@@ -580,3 +580,10 @@ bool Engine::isBeingCheckmated(Piece_Color color) {
         return hasPressure(BlackKing->getPos(), flipPieceColor(color));
     }
 }
+
+// TODO AI Bot
+// 优化的目标是疆域大小？
+// 递归正向推演几层后，使疆域最大的走法为最优解
+// 如果不clone整个engine，在原engine上进行推演的话，就得写模拟+恢复，很麻烦啊……
+// clone的话，每递归深入一层就要clone一份，但内存不是问题
+// 递归的可能性空间（时间）才是最大的问题啊……
