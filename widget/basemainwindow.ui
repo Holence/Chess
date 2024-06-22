@@ -21,7 +21,7 @@
     </size>
    </property>
    <property name="styleSheet">
-    <string notr="true">background-color: rgb(112, 80, 56)</string>
+    <string notr="true">#centralwidget {background-color: rgb(112, 80, 56);}</string>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
     <property name="spacing">
@@ -112,7 +112,6 @@
    </widget>
    <addaction name="menuGame"/>
   </widget>
-  <widget class="QStatusBar" name="statusBar"/>
   <action name="actionFilp_Board">
    <property name="text">
     <string>Filp Board</string>

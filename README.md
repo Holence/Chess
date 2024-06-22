@@ -2,6 +2,8 @@
 
 A chess game made with Qt
 
+![demo](demo.jpg)
+
 ## Features
 
 - Single Player Mode (Simulate White & Black)

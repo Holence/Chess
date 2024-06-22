@@ -28,7 +28,7 @@ Board::Board(QWidget *parent, Piece_Color selfColor, bool isPlayingMode)
     // draw board
     setFixedSize(QSize(800, 800));
     setObjectName("Board");
-    setStyleSheet("#Board{border-image: url(:/img/bg.png) 0 0 0 0 stretch stretch;}");
+    setStyleSheet("#Board{border-image: url(:/img/bg.jpg) 0 0 0 0 stretch stretch;}");
     // 自定义Widget的qss还得加上这个才能生效
     setAttribute(Qt::WA_StyledBackground, true);
 
@@ -259,9 +259,12 @@ Piece_Type Board::getPawnPromotion() {
         iconMap = BlackIcon;
 
     QDialog *dlg = new QDialog(this, Qt::WindowSystemMenuHint | Qt::WindowTitleHint);
+    dlg->setFixedSize(400, 100);
     dlg->setWindowTitle("Pawn Promotion");
-    dlg->setStyleSheet("QPushButton{background-color: rgba(0,0,0,0);}");
+    dlg->setStyleSheet(" QPushButton{background-color: rgba(0,0,0,0);} QDialog{border-image: url(:/img/pg.jpg) 0 0 0 0 stretch stretch;};");
     QHBoxLayout *layout = new QHBoxLayout();
+    layout->setMargin(0);
+    layout->setSpacing(0);
     Piece_Type typeArray[] = {Piece_Type::queen, Piece_Type::rook, Piece_Type::knight, Piece_Type::bishop};
     for (int i = 0; i < 4; i++) {
         QPushButton *b = new QPushButton(dlg);

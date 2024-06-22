@@ -20,7 +20,6 @@ PeerWindow::PeerWindow(QWidget *parent, bool isServer) : BaseMainWindow(parent, 
     }
 
     connect(peer, &Peer::socketClosed, this, &PeerWindow::socketClosedSlot);
-    ui->statusBar->showMessage(peer->getConnectionInfo());
 
     selfColor = peer->getSelfColor();
     board = new Board(this, selfColor, true);

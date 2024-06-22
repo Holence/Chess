@@ -1,7 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>img/bb.png</file>
-        <file>img/bg.png</file>
         <file>img/bk.png</file>
         <file>img/bn.png</file>
         <file>img/bp.png</file>
@@ -101,5 +100,7 @@
         <file>taunt/yu06.wav</file>
         <file>taunt/yu07.wav</file>
         <file>taunt/yu08.wav</file>
+        <file>img/bg.jpg</file>
+        <file>img/pg.jpg</file>
     </qresource>
 </RCC>
