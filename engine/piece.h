@@ -65,6 +65,7 @@ public:
     void setType(Piece_Type type);
     void setColor(Piece_Color newColor);
     void setPos(Position pos);
+    bool isDarkColor();
 
 protected:
     Piece_Type type;

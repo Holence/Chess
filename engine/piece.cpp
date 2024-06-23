@@ -23,6 +23,10 @@ void Piece::setPos(Position pos) {
     this->pos = pos;
 }
 
+bool Piece::isDarkColor() {
+    return (pos.x + pos.y) % 2 == 0;
+}
+
 Piece_Color flipPieceColor(Piece_Color color) {
     return color == Piece_Color::White ? Piece_Color::Black : Piece_Color::White;
 }

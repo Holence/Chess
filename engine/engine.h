@@ -50,6 +50,8 @@ private:
     QList<Position> getMovablePos(Piece *p);
 
     Pawn *EnPassantPawn = nullptr; // 之前一个State时（对手）前进两格的Pawn的Position
+
+    bool checkOtherDraw();
 };
 
 #endif // ENGINE_H

@@ -3,10 +3,12 @@
 King::King(Piece_Color color, Position pos) : Piece(color, pos) {
     type = Piece_Type::king;
     moved = pos.x != 5;
-    if (color == Piece_Color::White) {
-        moved = pos.y != 1;
-    } else {
-        moved = pos.y != 8;
+    if (!moved) {
+        if (color == Piece_Color::White) {
+            moved = pos.y != 1;
+        } else {
+            moved = pos.y != 8;
+        }
     }
 }
 

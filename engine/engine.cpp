@@ -106,7 +106,7 @@ GameState Engine::checkGameState(Piece_Color color) {
     // 如果对方没有棋能动
     //    如果对方被将，则自己赢了
     //    如果对方没被将，则平局
-    // 如果对方有棋能动，则继续
+    // 如果对方有棋能动，如果不是特殊情况的平局，则继续
 
     Piece_Color oppColor = flipPieceColor(color);
     QList<Piece *> l;
@@ -128,7 +128,10 @@ GameState Engine::checkGameState(Piece_Color color) {
         }
     }
     if (hasMoveChance) {
-        return GameState::Unfinished;
+        if (checkOtherDraw())
+            return GameState::Draw;
+        else
+            return GameState::Unfinished;
     } else {
         if (beingCheckmated) {
             // 对方输了
@@ -137,8 +140,54 @@ GameState Engine::checkGameState(Piece_Color color) {
             return GameState::Draw;
         }
     }
+}
 
-    // TODO Other Draw 只剩马？
+bool Engine::checkOtherDraw() {
+    // Other Draw
+    // https://www.chess.com/terms/draw-chess
+    // https://www.chess.com/forum/view/endgames/kingbishop-vs-kingknight-not-forced-draw
+    // Must be Draw:
+    // King vs King, or
+    // King vs King & Bishop, or
+    // King Vs King & Knight, or
+    // King & Bishop vs King & Bishop if and only if both bishops are on the same coloured squares.
+    if (WhitePieces.length() <= 2 and BlackPieces.length() <= 2) {
+        QList<Piece *> pieceLeft;
+        foreach (Piece *p, WhitePieces) {
+            if (p->getType() != Piece_Type::king)
+                pieceLeft.append(p);
+        }
+        foreach (Piece *p, BlackPieces) {
+            if (p->getType() != Piece_Type::king)
+                pieceLeft.append(p);
+        }
+
+        // King vs King, thus Draw
+        if (pieceLeft.isEmpty()) {
+            return true;
+        } else {
+            foreach (Piece *p, pieceLeft) {
+                // has other Piece, thus not Draw
+                if (p->getType() != Piece_Type::knight and p->getType() != Piece_Type::bishop)
+                    return false;
+            }
+            // only has Knight or Bishop
+            if (pieceLeft.length() == 1) {
+                // only one player has Knight or Bishop, thus Draw
+                return true;
+            } else {
+                // both player has Knight or Bishop
+                if (pieceLeft.at(0)->getType() == Piece_Type::bishop and pieceLeft.at(1)->getType() == Piece_Type::bishop and (pieceLeft.at(0)->isDarkColor() == pieceLeft.at(1)->isDarkColor())) {
+                    // King & Bishop vs King & Bishop if and only if both bishops are on the same coloured squares, thus Draw
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        }
+    }
+    return false;
+    // TODO 还有其他更奇葩的Draw
 }
 
 /**
@@ -323,7 +372,7 @@ QList<Position> Engine::getMovablePos(Piece *p) {
         } else {
             OppPieces = &WhitePieces;
         }
-        int index;
+        int index = 0;
         foreach (Position pos_to, l_copy) {
             // 模拟走出一步
             Piece *p_to = getPiece(pos_to);
