@@ -4,7 +4,6 @@
 #include "board.h"
 #include "engine/piece.h"
 #include "ui_basemainwindow.h"
-#include <QDebug>
 #include <QMainWindow>
 
 QT_BEGIN_NAMESPACE

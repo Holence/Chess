@@ -138,7 +138,7 @@ font-size: 12px;</string>
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="label_delay">
+        <widget class="QLabel" name="label_latency">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
            <horstretch>0</horstretch>

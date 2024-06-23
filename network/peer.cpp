@@ -63,8 +63,8 @@ void Peer::handleDataIn() {
     case 1:
         if (!isServer) {
             // client收到server发来的时间戳，向server返回自己的时间
-            sendTime();
             emit receivedTime(QDateTime::currentMSecsSinceEpoch() - op.toLongLong());
+            sendTime();
         } else {
             // 收到client的时间戳，结束
             emit receivedTime(QDateTime::currentMSecsSinceEpoch() - op.toLongLong());

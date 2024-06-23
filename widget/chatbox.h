@@ -3,7 +3,7 @@
 
 #include <QDockWidget>
 #include <QLineEdit>
-#include <QTextEdit>
+#include <QPlainTextEdit>
 
 class ChatBox : public QDockWidget {
     Q_OBJECT
@@ -14,7 +14,7 @@ signals:
     QString sendMessage(QString s);
 
 private:
-    QTextEdit *messageDisplay;
+    QPlainTextEdit *messageDisplay;
     QLineEdit *messageInput;
 };
 

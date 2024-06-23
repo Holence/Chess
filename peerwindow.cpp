@@ -52,6 +52,7 @@ PeerWindow::PeerWindow(QWidget *parent, bool isServer) : BaseMainWindow(parent, 
     chatbox = new ChatBox("Chat Box", this);
     connect(chatbox, &ChatBox::sendMessage, peer, &Peer::sendMessage);
     connect(peer, &Peer::receivedMessage, chatbox, &ChatBox::receivedMessage);
+    chatbox->move(x() + width(), y());
 
     // 其他的错误信息就写在chatbox中
     connect(peer, &Peer::socketError, chatbox, &ChatBox::receivedMessage);
@@ -68,16 +69,16 @@ PeerWindow::PeerWindow(QWidget *parent, bool isServer) : BaseMainWindow(parent, 
     }
     connect(peer, &Peer::receivedTaunt, this, &PeerWindow::playTaunt);
 
-    // Delay
-    connect(peer, &Peer::receivedTime, this, [this](int delay) {
-        ui->label_info->setText(peer->getConnectionInfo() + " | Delay: ");
-        ui->label_delay->setText(QString::number(delay) + "ms");
-        if (delay < 100) {
-            ui->label_delay->setStyleSheet("color: rgb(0,255,0)");
-        } else if (delay < 200) {
-            ui->label_delay->setStyleSheet("color: rgb(255,255,0)");
+    // Latency
+    connect(peer, &Peer::receivedTime, this, [this](int latency) {
+        ui->label_info->setText(peer->getConnectionInfo() + " | Latency: ");
+        ui->label_latency->setText(QString::number(latency) + "ms");
+        if (latency < 100) {
+            ui->label_latency->setStyleSheet("color: rgb(0,255,0)");
+        } else if (latency < 200) {
+            ui->label_latency->setStyleSheet("color: rgb(255,255,0)");
         } else {
-            ui->label_delay->setStyleSheet("color: rgb(255,0,0)");
+            ui->label_latency->setStyleSheet("color: rgb(255,0,0)");
         }
     });
 
@@ -146,6 +147,11 @@ bool PeerWindow::connectDialog() {
         layout->addWidget(rejectButton);
     }
     dlg->setLayout(layout);
+
+    // move to center of parent
+    // need to force adjustSize() before show(), or it will get the wrong size()
+    dlg->adjustSize();
+    dlg->move(parentWidget()->pos() + parentWidget()->rect().center() - dlg->rect().center());
 
     if (dlg->exec() == QDialog::Rejected) {
         delete dlg;

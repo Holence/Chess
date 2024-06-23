@@ -31,7 +31,7 @@ signals:
     void receivedResign();
     void receivedMessage(QString s);
     void receivedTaunt(QString country, int i);
-    void receivedTime(int delay);
+    void receivedTime(int latency);
 public slots:
     void setSelfColor(Piece_Color color);
 
