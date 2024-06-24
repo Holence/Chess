@@ -13,7 +13,7 @@ SinglePlayerWindow::SinglePlayerWindow(QWidget *parent) : BaseMainWindow(parent,
     ui->centerLayout->addWidget(board);
 
     // Replay
-    replay = new Replay(selfColor);
+    replay = new Replay(this, selfColor);
 }
 
 void SinglePlayerWindow::pieceMovedSlot(Movement m) {

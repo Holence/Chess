@@ -26,7 +26,7 @@ ChatBox::ChatBox(const QString &title, QWidget *parent) : QDockWidget(title, par
     connect(messageInput, &QLineEdit::returnPressed, this, [this] {
         QString s(messageInput->text());
         if (!s.isEmpty()) {
-            messageDisplay->appendPlainText("Me: " + s + "\n");
+            messageDisplay->appendPlainText(QString("%1: %2\n").arg(selfName, s));
             emit sendMessage(s);
             messageInput->clear();
         }
@@ -40,5 +40,13 @@ ChatBox::ChatBox(const QString &title, QWidget *parent) : QDockWidget(title, par
 }
 
 void ChatBox::receivedMessage(QString s) {
-    messageDisplay->appendPlainText("Opponent: " + s + "\n");
+    messageDisplay->appendPlainText(QString("%1: %2\n").arg(oppName, s));
+}
+
+void ChatBox::setSelfName(QString newSelfName) {
+    selfName = newSelfName;
+}
+
+void ChatBox::setOppName(QString newOppName) {
+    oppName = newOppName;
 }

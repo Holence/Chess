@@ -10,12 +10,16 @@ class ChatBox : public QDockWidget {
 public:
     ChatBox(const QString &title, QWidget *parent = nullptr);
     void receivedMessage(QString s);
+    void setSelfName(QString newSelfName);
+    void setOppName(QString newOppName);
+
 signals:
     QString sendMessage(QString s);
 
 private:
     QPlainTextEdit *messageDisplay;
     QLineEdit *messageInput;
+    QString selfName, oppName;
 };
 
 #endif // CHATBOX_H

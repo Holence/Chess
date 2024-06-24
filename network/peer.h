@@ -14,14 +14,17 @@ public:
 
     void disconnectSocket();
 
+    void sendReadyToReceiveSignal();
     void sendMovement(Movement m);
     void sendResign();
     void sendMessage(QString s);
     void sendTaunt(QString country, int i);
     void sendPing();
+    void sendNickname();
 
     int getPort();
     Piece_Color getSelfColor();
+    QString getNickname();
 
 signals:
     void socketError(QString error);
@@ -33,8 +36,11 @@ signals:
     void receivedMessage(QString s);
     void receivedTaunt(QString country, int i);
     void receivedTime(int latency);
+
+    void receivedOppNickname(QString nickname);
 public slots:
     void setSelfColor(Piece_Color color);
+    void setNickname(QString nickname);
 
 protected:
     bool isServer;
@@ -46,6 +52,8 @@ protected:
     QTcpServer *tcpServer = nullptr;
     QTcpSocket *tcpSocket = nullptr;
     QTimer *timer;
+
+    QString nickname;
 };
 
 #endif // PEER_H

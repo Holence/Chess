@@ -24,6 +24,28 @@ void Peer::disconnectSocket() {
         tcpSocket->close();
 }
 
+/**
+ * 初始化，互相给对方传对方的color
+ */
+void Peer::sendInializePack() {
+    handleDataOut("0" + QString(flipPieceColor(selfColor)));
+}
+
+/**
+ * connectionSuccessed后，自己的peerwindow界面生成完毕，调用这个函数，发信息告诉对方可以给自己发送ping和nickname了
+ */
+void Peer::sendReadyToReceiveSignal() {
+    handleDataOut("0");
+}
+
+void Peer::sendPing() {
+    if (isServer) {
+        handleDataOut("1" + QString::number(QDateTime::currentMSecsSinceEpoch()));
+    } else {
+        handleDataOut("2" + QString::number(QDateTime::currentMSecsSinceEpoch()));
+    }
+}
+
 void Peer::sendMovement(Movement m) {
     handleDataOut("5" + Movement::toString(m));
 }
@@ -40,12 +62,8 @@ void Peer::sendTaunt(QString country, int i) {
     handleDataOut("7" + country + " " + QString::number(i));
 }
 
-void Peer::sendPing() {
-    if (isServer) {
-        handleDataOut("1" + QString::number(QDateTime::currentMSecsSinceEpoch()));
-    } else {
-        handleDataOut("2" + QString::number(QDateTime::currentMSecsSinceEpoch()));
-    }
+void Peer::sendNickname() {
+    handleDataOut("3" + nickname);
 }
 
 void Peer::handleDataOut(QString s) {
@@ -65,28 +83,29 @@ void Peer::handleDataIn() {
             QString op = s.mid(1);
             switch (s.at(0).digitValue()) {
             case 0:
-                if (!isServer) {
-                    // client收到自己的颜色
-                    if (op == 'w')
-                        setSelfColor(Piece_Color::White);
-                    else
-                        setSelfColor(Piece_Color::Black);
-                    // 发回给server进行确认
-                    sendInializePack();
-                    emit connectionSuccessed();
-                    // client开启timer
+                if (!op.isEmpty()) {
+                    if (!isServer) {
+                        // client收到自己的颜色
+                        if (op == 'w')
+                            setSelfColor(Piece_Color::White);
+                        else
+                            setSelfColor(Piece_Color::Black);
+                        // 发回给server进行确认
+                        sendInializePack();
+                        emit connectionSuccessed();
+                    } else {
+                        // server收到颜色确认
+                        if (op == selfColor) {
+                            emit connectionSuccessed();
+
+                        } else {
+                            emit socketError("Color not match!!!");
+                        }
+                    }
+                } else {
                     timer->start();
                     sendPing();
-                } else {
-                    // server收到颜色确认
-                    if (op == selfColor) {
-                        emit connectionSuccessed();
-                        // server开启timer
-                        timer->start();
-                        sendPing();
-                    } else {
-                        emit socketError("Color not match!!!");
-                    }
+                    sendNickname();
                 }
                 break;
             case 1:
@@ -106,6 +125,9 @@ void Peer::handleDataIn() {
                     // client收到server返还的ping package，得到RTT
                     emit receivedTime((QDateTime::currentMSecsSinceEpoch() - op.toLongLong()) / 2);
                 }
+                break;
+            case 3:
+                emit receivedOppNickname(op);
                 break;
             case 5:
                 emit receivedMovement(Movement::fromString(op));
@@ -130,6 +152,14 @@ void Peer::setSelfColor(Piece_Color color) {
     selfColor = color;
 }
 
+void Peer::setNickname(QString nickname) {
+    this->nickname = nickname;
+}
+
+QString Peer::getNickname() {
+    return nickname;
+}
+
 void Peer::bondSocketSignalSlot() {
     connect(tcpSocket, &QAbstractSocket::errorOccurred, this, [this](QAbstractSocket::SocketError error) {
         if (error != QAbstractSocket::RemoteHostClosedError)
@@ -138,10 +168,6 @@ void Peer::bondSocketSignalSlot() {
             emit socketClosed();
     });
     connect(tcpSocket, &QTcpSocket::readyRead, this, &Peer::handleDataIn);
-}
-
-void Peer::sendInializePack() {
-    handleDataOut("0" + QString(flipPieceColor(selfColor)));
 }
 
 Piece_Color Peer::getSelfColor() {

@@ -6,7 +6,7 @@ ReplayWindow::ReplayWindow(QWidget *parent, QString &filename) : BaseMainWindow(
     setFixedSize(800, 846);
     ui->statusBar->hide();
 
-    Replay replay = Replay(filename);
+    Replay replay = Replay(this, filename);
     selfColor = replay.getSelfColor();
 
     board = new Board(this, selfColor, isPlayingMode);

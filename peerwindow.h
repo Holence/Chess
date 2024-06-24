@@ -4,6 +4,7 @@
 #include "network/peer.h"
 #include "widget/basemainwindow.h"
 #include "widget/chatbox.h"
+#include <QSettings>
 
 class PeerWindow : public BaseMainWindow {
 public:
@@ -29,6 +30,8 @@ private:
     QString tauntCountry;
     QList<QAction *> tauntActionList;
     void playTaunt(QString country, int i);
+
+    QSettings *settings;
 };
 
 #endif // PEERWINDOW_H

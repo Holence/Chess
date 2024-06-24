@@ -13,6 +13,8 @@ PeerWindow::PeerWindow(QWidget *parent, bool isServer) : BaseMainWindow(parent, 
     setWindowTitle("Online Play Mode");
     setFixedSize(800, 862);
 
+    settings = new QSettings("settings.ini", QSettings::IniFormat, this);
+
     this->isServer = isServer;
 
     if (!connectDialog()) {
@@ -21,12 +23,18 @@ PeerWindow::PeerWindow(QWidget *parent, bool isServer) : BaseMainWindow(parent, 
     }
 
     connect(peer, &Peer::socketClosed, this, &PeerWindow::socketClosedSlot);
+    connect(peer, &Peer::receivedMovement, this, &PeerWindow::receivedMovementSlot);
+    connect(peer, &Peer::receivedResign, this, &PeerWindow::receivedResignSlot);
 
+    // Board
     selfColor = peer->getSelfColor();
     board = new Board(this, selfColor, isPlayingMode);
     connect(board, &Board::pieceMoved, this, &PeerWindow::pieceMovedSlot);
     bondBoardSlot();
     ui->centerLayout->addWidget(board);
+
+    currentColor = Piece_Color::White;
+    board->setAttribute(Qt::WA_TransparentForMouseEvents, currentColor != selfColor);
 
     // 另外绑定到通知对方
     disconnect(actionResign, nullptr, nullptr, nullptr);
@@ -40,16 +48,15 @@ PeerWindow::PeerWindow(QWidget *parent, bool isServer) : BaseMainWindow(parent, 
             return BaseMainWindow::gameEndSlot(GameState::WhiteWin);
     });
 
-    replay = new Replay(selfColor);
-
-    currentColor = Piece_Color::White;
-    board->setAttribute(Qt::WA_TransparentForMouseEvents, currentColor != selfColor);
-
-    connect(peer, &Peer::receivedMovement, this, &PeerWindow::receivedMovementSlot);
-    connect(peer, &Peer::receivedResign, this, &PeerWindow::receivedResignSlot);
+    // Replay
+    replay = new Replay(this, selfColor);
+    replay->setSelfName(peer->getNickname());
+    connect(peer, &Peer::receivedOppNickname, replay, &Replay::setOppName);
 
     // Chatbox
     chatbox = new ChatBox("Chat Box", this);
+    chatbox->setSelfName(peer->getNickname());
+    connect(peer, &Peer::receivedOppNickname, chatbox, &ChatBox::setOppName);
     connect(chatbox, &ChatBox::sendMessage, peer, &Peer::sendMessage);
     connect(peer, &Peer::receivedMessage, chatbox, &ChatBox::receivedMessage);
     chatbox->move(x() + width(), y());
@@ -83,6 +90,9 @@ PeerWindow::PeerWindow(QWidget *parent, bool isServer) : BaseMainWindow(parent, 
         }
     });
 
+    // 等界面、Replay、ChatBox都初始化后，才可以发送Ping、NickName的数据包
+    peer->sendReadyToReceiveSignal();
+
     show();
 }
 
@@ -105,29 +115,49 @@ bool PeerWindow::connectDialog() {
         QLabel *port_label = new QLabel("Port: " + QString::number(peer->getPort()));
         port_label->setTextInteractionFlags(Qt::TextSelectableByMouse);
 
-        QComboBox *combo = new QComboBox();
-        combo->addItem("White");
-        combo->addItem("Black");
-        peer->setSelfColor(Piece_Color::White);
+        QLabel *name_label = new QLabel("Your Nickname");
+        QLineEdit *name_edit = new QLineEdit(settings->value("Nickname", "Player").toString());
+        peer->setNickname(name_edit->text());
+        connect(name_edit, &QLineEdit::textChanged, dlg, [this](QString text) {
+            settings->setValue("Nickname", text);
+            peer->setNickname(text);
+        });
 
-        connect(combo, QOverload<int>::of(&QComboBox::currentIndexChanged), peer, [this](int index) {
+        QLabel *color_label = new QLabel("Choose your color");
+        QComboBox *color_combo = new QComboBox();
+        color_combo->addItem("White");
+        color_combo->addItem("Black");
+        peer->setSelfColor(Piece_Color::White);
+        connect(color_combo, QOverload<int>::of(&QComboBox::currentIndexChanged), peer, [this](int index) {
             if (index == 0)
                 peer->setSelfColor(Piece_Color::White);
             else
                 peer->setSelfColor(Piece_Color::Black);
         });
+
         connect(rejectButton, &QPushButton::clicked, dlg, [dlg] { dlg->reject(); });
         connect(peer, &Peer::connectionSuccessed, dlg, [dlg] { dlg->accept(); });
 
         layout->addWidget(label);
         layout->addWidget(port_label);
-        layout->addWidget(combo);
+        layout->addWidget(name_label);
+        layout->addWidget(name_edit);
+        layout->addWidget(color_label);
+        layout->addWidget(color_combo);
         layout->addWidget(rejectButton);
 
     } else {
         // Client
         peer = new Client(this);
         dlg->setWindowTitle("Join Server");
+
+        QLabel *name_label = new QLabel("Your Nickname");
+        QLineEdit *name_edit = new QLineEdit(settings->value("Nickname", "Player").toString());
+        peer->setNickname(name_edit->text());
+        connect(name_edit, &QLineEdit::textChanged, dlg, [this](QString text) {
+            settings->setValue("Nickname", text);
+            peer->setNickname(text);
+        });
 
         QLabel *ip_label = new QLabel("Server Hostname / IP");
         QLineEdit *ip_edit = new QLineEdit("127.0.0.1");
@@ -153,6 +183,8 @@ bool PeerWindow::connectDialog() {
             connectButton->setEnabled(true);
         });
 
+        layout->addWidget(name_label);
+        layout->addWidget(name_edit);
         layout->addWidget(ip_label);
         layout->addWidget(ip_edit);
         layout->addWidget(port_label);
