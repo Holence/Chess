@@ -9,6 +9,19 @@
 #include <QMessageBox>
 #include <QRandomGenerator>
 
+QMap<QString, QString> countryMap = {
+    {"America", "am"},
+    {"Britain", "br"},
+    {"Cuba", "cu"},
+    {"France", "fr"},
+    {"German", "ge"},
+    {"Iraq", "ir"},
+    {"Korea", "ko"},
+    {"Libya", "li"},
+    {"Russia", "ru"},
+    {"Yuri", "yu"},
+};
+
 PeerWindow::PeerWindow(QWidget *parent, bool isServer) : BaseMainWindow(parent, true) {
     setWindowTitle("Online Play Mode");
     setFixedSize(800, 862);
@@ -66,8 +79,6 @@ PeerWindow::PeerWindow(QWidget *parent, bool isServer) : BaseMainWindow(parent, 
     connect(peer, &Peer::socketError, chatbox, &ChatBox::receivedMessage);
 
     // Taunt
-    QList<QString> countryList = {"am", "br", "cu", "fr", "ge", "ir", "ko", "li", "ru", "yu"};
-    tauntCountry = countryList[QRandomGenerator::global()->bounded(countryList.length())];
     for (int i = 0; i < 8; i++) {
         QAction *a = new QAction(this);
         a->setShortcut(QKeySequence("F" + QString::number(i + 1)));
@@ -77,9 +88,13 @@ PeerWindow::PeerWindow(QWidget *parent, bool isServer) : BaseMainWindow(parent, 
     }
     connect(peer, &Peer::receivedTaunt, this, &PeerWindow::playTaunt);
 
+    // Status info
+    connect(peer, &Peer::receivedOppNickname, this, [this](QString oppName) {
+        ui->label_info->setText(QString("%1  vs  %2  |  %3  |  Latency:  ").arg(peer->getNickname(), oppName, peer->getConnectionInfo()));
+    });
+
     // Latency
     connect(peer, &Peer::receivedTime, this, [this](int latency) {
-        ui->label_info->setText(peer->getConnectionInfo() + " | Latency: ");
         ui->label_latency->setText(QString::number(latency) + "ms");
         if (latency < 100) {
             ui->label_latency->setStyleSheet("color: rgb(0,255,0)");
@@ -102,12 +117,34 @@ PeerWindow::~PeerWindow() {
 }
 
 bool PeerWindow::connectDialog() {
+    if (isServer) {
+        peer = new Server(this);
+    } else {
+        peer = new Client(this);
+    }
+
     QDialog *dlg = new QDialog(this, Qt::WindowSystemMenuHint | Qt::WindowTitleHint);
     QVBoxLayout *layout = new QVBoxLayout(dlg);
 
+    QLabel *name_label = new QLabel("Your Nickname");
+    QLineEdit *name_edit = new QLineEdit(settings->value("Nickname", "Player").toString());
+    peer->setNickname(name_edit->text());
+    connect(name_edit, &QLineEdit::textChanged, dlg, [this](QString text) {
+        settings->setValue("Nickname", text);
+        peer->setNickname(text);
+    });
+
+    QLabel *country_label = new QLabel("Your Country");
+    QComboBox *country_combo = new QComboBox();
+    country_combo->addItems(countryMap.keys());
+    tauntCountry = countryMap["America"];
+    connect(country_combo, &QComboBox::currentTextChanged, this, [this](QString text) { tauntCountry = countryMap[text]; });
+
+    QFrame *hline = new QFrame();
+    hline->setFrameShape(QFrame::HLine);
+
     if (isServer) {
         // Server
-        peer = new Server(this);
         dlg->setWindowTitle("Host Server");
 
         QLabel *label = new QLabel("Waiting connection...");
@@ -115,15 +152,7 @@ bool PeerWindow::connectDialog() {
         QLabel *port_label = new QLabel("Port: " + QString::number(peer->getPort()));
         port_label->setTextInteractionFlags(Qt::TextSelectableByMouse);
 
-        QLabel *name_label = new QLabel("Your Nickname");
-        QLineEdit *name_edit = new QLineEdit(settings->value("Nickname", "Player").toString());
-        peer->setNickname(name_edit->text());
-        connect(name_edit, &QLineEdit::textChanged, dlg, [this](QString text) {
-            settings->setValue("Nickname", text);
-            peer->setNickname(text);
-        });
-
-        QLabel *color_label = new QLabel("Choose your color");
+        QLabel *color_label = new QLabel("Your color");
         QComboBox *color_combo = new QComboBox();
         color_combo->addItem("White");
         color_combo->addItem("Black");
@@ -140,24 +169,21 @@ bool PeerWindow::connectDialog() {
 
         layout->addWidget(label);
         layout->addWidget(port_label);
+
+        layout->addWidget(hline);
+
         layout->addWidget(name_label);
         layout->addWidget(name_edit);
+        layout->addWidget(country_label);
+        layout->addWidget(country_combo);
         layout->addWidget(color_label);
         layout->addWidget(color_combo);
+
         layout->addWidget(rejectButton);
 
     } else {
         // Client
-        peer = new Client(this);
         dlg->setWindowTitle("Join Server");
-
-        QLabel *name_label = new QLabel("Your Nickname");
-        QLineEdit *name_edit = new QLineEdit(settings->value("Nickname", "Player").toString());
-        peer->setNickname(name_edit->text());
-        connect(name_edit, &QLineEdit::textChanged, dlg, [this](QString text) {
-            settings->setValue("Nickname", text);
-            peer->setNickname(text);
-        });
 
         QLabel *ip_label = new QLabel("Server Hostname / IP");
         QLineEdit *ip_edit = new QLineEdit("127.0.0.1");
@@ -183,12 +209,18 @@ bool PeerWindow::connectDialog() {
             connectButton->setEnabled(true);
         });
 
-        layout->addWidget(name_label);
-        layout->addWidget(name_edit);
         layout->addWidget(ip_label);
         layout->addWidget(ip_edit);
         layout->addWidget(port_label);
         layout->addWidget(port_edit);
+
+        layout->addWidget(hline);
+
+        layout->addWidget(name_label);
+        layout->addWidget(name_edit);
+        layout->addWidget(country_label);
+        layout->addWidget(country_combo);
+
         layout->addWidget(connectButton);
         layout->addWidget(rejectButton);
     }
