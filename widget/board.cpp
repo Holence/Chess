@@ -1,6 +1,17 @@
 #include "board.h"
 #include <QDialog>
 #include <QGridLayout>
+#include <QMessageBox>
+#include <QTimer>
+
+const QMap<Piece_Type, QString> PieceTypeNameMap{
+    {Piece_Type::pawn, "Pawn"},
+    {Piece_Type::king, "King"},
+    {Piece_Type::queen, "Queen"},
+    {Piece_Type::rook, "Rook"},
+    {Piece_Type::bishop, "Bishop"},
+    {Piece_Type::knight, "Knight"},
+};
 
 const QMap<Piece_Type, QString> Board::WhiteIcon = {
     {Piece_Type::king, ":/img/wk.png"},
@@ -162,6 +173,7 @@ void Board::cellSelected(Position pos) {
 
     // 之前有选中有效的棋子 且 当前点的是可行的走位，则移动棋子
     if (selectedCell and movableCellList.contains(current_select_btn)) {
+
         Position pos_from = selectedCell->getPos();
         Position pos_to = pos;
 
@@ -175,6 +187,13 @@ void Board::cellSelected(Position pos) {
         }
 
         Movement m{translatePos(pos_from), translatePos(pos_to), promoteType};
+
+        if (needConfirm) {
+            if (!getConfirm(m)) {
+                return;
+            }
+        }
+
         Piece *p_eaten = engine.movePiece(m);
         if (p_eaten) {
             media_path = "qrc:/sound/capture.mp3";
@@ -376,4 +395,28 @@ QList<Position> Board::translatePosList(QList<Position> posList) {
 void Board::playMedia(QString path) {
     mediaPlayer->setMedia(QUrl(path));
     mediaPlayer->play();
+}
+
+bool Board::getNeedConfirm() {
+    return needConfirm;
+}
+
+void Board::setNeedConfirm(bool needConfirm) {
+    this->needConfirm = needConfirm;
+}
+
+bool Board::getConfirm(Movement m) {
+    QMessageBox msg(this);
+    QString info = QString("Confirm this move?\n\n%1 move from %2 to %3").arg(PieceTypeNameMap.value(engine.getPiece(m.pos_from)->getType()), m.pos_from.toString(), m.pos_to.toString());
+    if (m.promoteType != Piece_Type::null) {
+        info += ", and promote to " + PieceTypeNameMap.value(m.promoteType);
+    }
+
+    msg.setText(info);
+    msg.setIcon(QMessageBox::Question);
+    msg.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
+    msg.setDefaultButton(QMessageBox::Ok);
+
+    int choose = msg.exec();
+    return choose == QMessageBox::Ok;
 }

@@ -3,6 +3,7 @@
 #include "replaywindow.h"
 #include "singleplayerwindow.h"
 #include <QFileDialog>
+#include <QMessageBox>
 #include <QPushButton>
 #include <QVBoxLayout>
 
@@ -40,6 +41,18 @@ MainWindow::MainWindow(QWidget *parent)
         new PeerWindow(this, false);
     });
     layout->addWidget(b4);
+
+    QPushButton *b5 = new QPushButton("About");
+    connect(b5, &QPushButton::clicked, this, [this] {
+        QMessageBox msg(this);
+        msg.setWindowTitle("About");
+        msg.setTextFormat(Qt::RichText);
+        msg.setIconPixmap(QPixmap(":/img/wn.png").scaled(64, 64));
+        msg.setText("Author: Holence<br><br>Github: <a href='https://github.com/Holence/Chess/'>Repo</a>");
+        msg.setStandardButtons(QMessageBox::Ok);
+        msg.exec();
+    });
+    layout->addWidget(b5);
 
     centralwidget->setLayout(layout);
     setCentralWidget(centralwidget);

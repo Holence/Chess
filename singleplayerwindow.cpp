@@ -7,7 +7,7 @@ SinglePlayerWindow::SinglePlayerWindow(QWidget *parent) : BaseMainWindow(parent,
 
     selfColor = Piece_Color::White;
 
-    board = new Board(this, selfColor, true);
+    board = new Board(this, selfColor, isPlayingMode);
     connect(board, &Board::pieceMoved, this, &SinglePlayerWindow::pieceMovedSlot);
     bondBoardSlot();
     ui->centerLayout->addWidget(board);

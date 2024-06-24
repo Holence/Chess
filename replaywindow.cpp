@@ -9,7 +9,7 @@ ReplayWindow::ReplayWindow(QWidget *parent, QString &filename) : BaseMainWindow(
     Replay replay = Replay(filename);
     selfColor = replay.getSelfColor();
 
-    board = new Board(this, selfColor, false);
+    board = new Board(this, selfColor, isPlayingMode);
     bondBoardSlot();
     ui->centerLayout->addWidget(board);
 

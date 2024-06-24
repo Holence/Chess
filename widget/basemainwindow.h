@@ -31,6 +31,7 @@ protected:
     Piece_Color selfColor;
     Board *board = nullptr;
     QAction *actionResign;
+    QAction *actionConfirmSetting;
 };
 
 #endif // BASEMAINWINDOW_H

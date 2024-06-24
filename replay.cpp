@@ -46,14 +46,17 @@ void Replay::replaySave() {
     if (!dir.exists("./replay")) {
         dir.mkdir("./replay");
     }
-    QFile file("./replay/" + QDateTime::currentDateTime().toString("[yyyy.MM.dd] hh-mm-ss") + ".rep");
-    if (file.open(QFile::WriteOnly)) {
-        QTextStream stream(&file);
-        stream << QChar(selfColor) << "\n";
-        foreach (Movement m, movementList) {
-            stream << Movement::toString(m) << "\n";
+    // 走两步棋以上的才记录repaly
+    if (movementList.length() > 2) {
+        QFile file("./replay/" + QDateTime::currentDateTime().toString("[yyyy.MM.dd] hh-mm-ss") + ".rep");
+        if (file.open(QFile::WriteOnly)) {
+            QTextStream stream(&file);
+            stream << QChar(selfColor) << "\n";
+            foreach (Movement m, movementList) {
+                stream << Movement::toString(m) << "\n";
+            }
+            file.close();
         }
-        file.close();
     }
 }
 

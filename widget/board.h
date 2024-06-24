@@ -25,6 +25,10 @@ public:
     void flipBoard();
 
     void playMedia(QString path);
+
+    void setNeedConfirm(bool needConfirm);
+    bool getNeedConfirm();
+
 signals:
     // 己方棋子移动后触发，外界绑定后续的操作（to replay、to socket、转换到bot……）
     void pieceMoved(Movement m);
@@ -60,6 +64,9 @@ private:
     QList<Position> translatePosList(QList<Position> posList);
 
     QMediaPlayer *mediaPlayer;
+
+    bool needConfirm = false;
+    bool getConfirm(Movement m);
 };
 
 #endif // BOARD_H

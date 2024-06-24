@@ -18,8 +18,9 @@ public:
     void sendResign();
     void sendMessage(QString s);
     void sendTaunt(QString country, int i);
-    void sendTime();
+    void sendPing();
 
+    int getPort();
     Piece_Color getSelfColor();
 
 signals:

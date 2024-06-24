@@ -23,7 +23,7 @@ PeerWindow::PeerWindow(QWidget *parent, bool isServer) : BaseMainWindow(parent, 
     connect(peer, &Peer::socketClosed, this, &PeerWindow::socketClosedSlot);
 
     selfColor = peer->getSelfColor();
-    board = new Board(this, selfColor, true);
+    board = new Board(this, selfColor, isPlayingMode);
     connect(board, &Board::pieceMoved, this, &PeerWindow::pieceMovedSlot);
     bondBoardSlot();
     ui->centerLayout->addWidget(board);
@@ -53,6 +53,7 @@ PeerWindow::PeerWindow(QWidget *parent, bool isServer) : BaseMainWindow(parent, 
     connect(chatbox, &ChatBox::sendMessage, peer, &Peer::sendMessage);
     connect(peer, &Peer::receivedMessage, chatbox, &ChatBox::receivedMessage);
     chatbox->move(x() + width(), y());
+    chatbox->resize(400, height());
 
     // 其他的错误信息就写在chatbox中
     connect(peer, &Peer::socketError, chatbox, &ChatBox::receivedMessage);
@@ -101,6 +102,8 @@ bool PeerWindow::connectDialog() {
 
         QLabel *label = new QLabel("Waiting connection...");
         QPushButton *rejectButton = new QPushButton("Cancel");
+        QLabel *port_label = new QLabel("Port: " + QString::number(peer->getPort()));
+        port_label->setTextInteractionFlags(Qt::TextSelectableByMouse);
 
         QComboBox *combo = new QComboBox();
         combo->addItem("White");
@@ -117,6 +120,7 @@ bool PeerWindow::connectDialog() {
         connect(peer, &Peer::connectionSuccessed, dlg, [dlg] { dlg->accept(); });
 
         layout->addWidget(label);
+        layout->addWidget(port_label);
         layout->addWidget(combo);
         layout->addWidget(rejectButton);
 
@@ -125,14 +129,21 @@ bool PeerWindow::connectDialog() {
         peer = new Client(this);
         dlg->setWindowTitle("Join Server");
 
+        QLabel *ip_label = new QLabel("Server Hostname / IP");
         QLineEdit *ip_edit = new QLineEdit("127.0.0.1");
         ip_edit->setPlaceholderText("hostname or ip");
+
+        QLabel *port_label = new QLabel("Server Port");
+        QLineEdit *port_edit = new QLineEdit("11451");
+        port_edit->setPlaceholderText("port");
+
         QPushButton *connectButton = new QPushButton("Connect");
         QPushButton *rejectButton = new QPushButton("Cancel");
 
-        connect(connectButton, &QPushButton::clicked, dlg, [this, ip_edit, connectButton] {
+        connect(connectButton, &QPushButton::clicked, dlg, [this, ip_edit, port_edit, connectButton] {
             QString ip = ip_edit->text();
-            ((Client *)peer)->connectToServer(ip, 11451);
+            int port = port_edit->text().toInt();
+            ((Client *)peer)->connectToServer(ip, port);
             connectButton->setDisabled(true);
         });
         connect(rejectButton, &QPushButton::clicked, dlg, [dlg] { dlg->reject(); });
@@ -142,7 +153,10 @@ bool PeerWindow::connectDialog() {
             connectButton->setEnabled(true);
         });
 
+        layout->addWidget(ip_label);
         layout->addWidget(ip_edit);
+        layout->addWidget(port_label);
+        layout->addWidget(port_edit);
         layout->addWidget(connectButton);
         layout->addWidget(rejectButton);
     }

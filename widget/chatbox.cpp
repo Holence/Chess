@@ -5,17 +5,17 @@ ChatBox::ChatBox(const QString &title, QWidget *parent) : QDockWidget(title, par
     setFloating(true);
     setFeatures(features() & ~QDockWidget::DockWidgetClosable);
     setAllowedAreas(Qt::NoDockWidgetArea);
-    resize(QSize(400, 800));
 
     QWidget *multiWidget = new QWidget();
     QVBoxLayout *layout = new QVBoxLayout(multiWidget);
 
     messageDisplay = new QPlainTextEdit(this);
     messageDisplay->setReadOnly(true);
-    messageDisplay->appendHtml("<p style=\"font-size:10pt; color:gray;\">Communication channel established.<br>"
-                               "Input message and press Enter to send.<br>"
-                               "Note that the channel is not encrypted, so be careful what you say.<br>"
-                               "---------------------------------------------------------<br></p>");
+    messageDisplay->appendPlainText("Communication channel established.\n"
+                                    "Input message and press Enter to send.\n"
+                                    "Note that the channel is not encrypted.\n"
+                                    "So be careful what you say.\n"
+                                    "-----------------------------------------------------\n");
 
     QFont f("Microsoft YaHei UI", 13, QFont::Medium);
     messageDisplay->setFont(f);

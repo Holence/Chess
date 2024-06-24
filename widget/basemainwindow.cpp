@@ -15,6 +15,7 @@ BaseMainWindow::BaseMainWindow(QWidget *parent, bool isPlayingMode)
     this->isPlayingMode = isPlayingMode;
 
     if (isPlayingMode) {
+        // resign
         actionResign = new QAction(this);
         actionResign->setText("Resign");
         connect(actionResign, &QAction::triggered, this, [this] {
@@ -24,6 +25,20 @@ BaseMainWindow::BaseMainWindow(QWidget *parent, bool isPlayingMode)
                 return gameEndSlot(GameState::WhiteWin);
         });
         ui->menuGame->addAction(actionResign);
+
+        // need confirm dialog?
+        actionConfirmSetting = new QAction(this);
+        actionConfirmSetting->setText("Need Confirm - Off");
+        connect(actionConfirmSetting, &QAction::triggered, this, [this] {
+            if (board->getNeedConfirm()) {
+                board->setNeedConfirm(false);
+                actionConfirmSetting->setText("Need Confirm - Off");
+            } else {
+                board->setNeedConfirm(true);
+                actionConfirmSetting->setText("Need Confirm - On");
+            }
+        });
+        ui->menuGame->addAction(actionConfirmSetting);
     }
 }
 
