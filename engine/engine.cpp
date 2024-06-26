@@ -18,7 +18,8 @@ char chessBoardCode[] =
     "RNBQKBNR";
 
 Engine::Engine() {
-    board = new Cell[64]{nullptr};
+    board = new Cell[64];
+    std::fill_n(board, 64, nullptr);
 
     Piece_Color color;
     QList<Piece *> *PiecesList;
@@ -77,7 +78,7 @@ Engine::Engine() {
 }
 
 Engine::~Engine() {
-    delete board;
+    delete[] board;
     for (int i = 0; i < WhitePieces.length(); i++) {
         delete WhitePieces.at(i);
     }
