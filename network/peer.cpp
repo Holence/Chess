@@ -28,7 +28,7 @@ void Peer::disconnectSocket() {
  * 初始化，互相给对方传对方的color
  */
 void Peer::sendInializePack() {
-    handleDataOut("0" + QString(flipPieceColor(selfColor)));
+    handleDataOut("0" + QString(flipPieceColor(selfColor)) + QString::number(RTS_mode));
 }
 
 /**
@@ -86,18 +86,23 @@ void Peer::handleDataIn() {
                 if (!op.isEmpty()) {
                     if (!isServer) {
                         // client收到自己的颜色
-                        if (op == 'w')
+                        if (op.at(0) == 'w')
                             setSelfColor(Piece_Color::White);
                         else
                             setSelfColor(Piece_Color::Black);
+                        // client收到RTS_mode
+                        if (op.at(1) == '0')
+                            RTS_mode = false;
+                        else
+                            RTS_mode = true;
+
                         // 发回给server进行确认
                         sendInializePack();
                         emit connectionSuccessed();
                     } else {
                         // server收到颜色确认
-                        if (op == selfColor) {
+                        if (op.at(0) == selfColor) {
                             emit connectionSuccessed();
-
                         } else {
                             emit socketError("Color not match!!!");
                         }
@@ -152,6 +157,10 @@ void Peer::setSelfColor(Piece_Color color) {
     selfColor = color;
 }
 
+void Peer::setRTS_Mode(bool RTS_mode) {
+    this->RTS_mode = RTS_mode;
+}
+
 void Peer::setNickname(QString nickname) {
     this->nickname = nickname;
 }
@@ -172,4 +181,8 @@ void Peer::bondSocketSignalSlot() {
 
 Piece_Color Peer::getSelfColor() {
     return selfColor;
+}
+
+bool Peer::getRTS_Mode() {
+    return RTS_mode;
 }

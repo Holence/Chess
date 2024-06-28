@@ -6,7 +6,7 @@
 class SinglePlayerWindow : public BaseMainWindow {
     Q_OBJECT
 public:
-    SinglePlayerWindow(QWidget *parent);
+    SinglePlayerWindow(QWidget *parent, bool RTS_mode);
 
 protected slots:
     void pieceMovedSlot(Movement m);

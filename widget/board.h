@@ -10,7 +10,7 @@
 class Board : public QWidget {
     Q_OBJECT
 public:
-    Board(QWidget *parent, Piece_Color selfColor, bool isPlayingMode = true);
+    Board(QWidget *parent, Piece_Color selfColor, bool isPlayingMode, bool RTS_mode);
     ~Board();
 
     static const QMap<Piece_Type, QString> WhiteIcon, BlackIcon;
@@ -43,16 +43,19 @@ private slots:
 
 private:
     Engine engine;
+    bool RTS_mode;
 
     Piece_Color selfColor;
     bool boardFilpped;
 
     void updateCellIcon(Position pos);
     void drawBoard();
+    void drawBoardBlind();
 
     CellButton **cellArray = nullptr;
     CellButton *getCellBtn(Position pos);
 
+    void movePieceHandler(Movement m, bool isMyOperation);
     Piece_Type getPawnPromotion();
 
     CellButton *selectedCell = nullptr;

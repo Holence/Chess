@@ -19,6 +19,10 @@ void CellButton::clearColor() {
     setStyleSheet("background-color: rgba(0,0,0,0);");
 }
 
+void CellButton::setBlack() {
+    setStyleSheet("background-color: rgba(0,0,0,255);");
+}
+
 void CellButton::mousePressEvent(QMouseEvent *e) {
     if (e->button() == Qt::RightButton) {
         emit rightClicked();

@@ -78,6 +78,8 @@ void Replay::replaySave() {
     // 走两步棋以上的才记录repaly
     if (movementList.length() > 2) {
         QString filename = QString("(%1 vs %2) %3.rep").arg(selfName, oppName, QDateTime::currentDateTime().toString("[yyyy.MM.dd] hh-mm-ss"));
+        if (RTS_mode)
+            filename = "<RTS> " + filename;
         QFile file("./replay/" + makeValidFilename(filename));
         if (file.open(QFile::WriteOnly)) {
             QTextStream stream(&file);
@@ -88,6 +90,10 @@ void Replay::replaySave() {
             file.close();
         }
     }
+}
+
+void Replay::setRTS_mode(bool RTS_mode) {
+    this->RTS_mode = RTS_mode;
 }
 
 Piece_Color Replay::getSelfColor() {

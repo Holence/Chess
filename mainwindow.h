@@ -7,6 +7,9 @@ class MainWindow : public QMainWindow {
     Q_OBJECT
 public:
     explicit MainWindow(QWidget *parent = nullptr);
+
+private:
+    bool RTS_mode = false;
 };
 
 #endif // MAINWINDOW_H

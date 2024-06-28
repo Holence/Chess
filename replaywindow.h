@@ -5,7 +5,7 @@
 
 class ReplayWindow : public BaseMainWindow {
 public:
-    ReplayWindow(QWidget *parent, QString &filename);
+    ReplayWindow(QWidget *parent, QString &filename, bool RTS_mode);
 
 private:
     QList<Movement> movementList;

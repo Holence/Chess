@@ -16,18 +16,21 @@ enum class GameState {
 
 class Engine {
 public:
-    Engine();
+    Engine(bool RTS_mode = false);
     ~Engine();
 
     Piece *movePiece(Movement m);
     GameState checkGameState(Piece_Color color);
 
     QList<Position> getPossibleMove(Position pos);
+    QList<Position> getVisibleArea(Piece_Color color);
     Piece *getPiece(Position pos);
 
-    bool getBeingCheckmated();
+    bool isCheckmating(Piece_Color color);
+    bool isKingAlive(Piece_Color color);
 
 private:
+    bool RTS_mode;
     Cell *board = nullptr; // board是指向Cell array的指针
     QList<Piece *> WhitePieces;
     QList<Piece *> WhiteDeadPieces;

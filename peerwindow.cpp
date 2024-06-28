@@ -22,7 +22,7 @@ QMap<QString, QString> countryMap = {
     {"Yuri", "yu"},
 };
 
-PeerWindow::PeerWindow(QWidget *parent, bool isServer) : BaseMainWindow(parent, true) {
+PeerWindow::PeerWindow(QWidget *parent, bool isServer, bool RTS_mode) : BaseMainWindow(parent, true) {
     setWindowTitle("Online Play Mode");
     setFixedSize(800, 862);
 
@@ -30,7 +30,7 @@ PeerWindow::PeerWindow(QWidget *parent, bool isServer) : BaseMainWindow(parent, 
 
     this->isServer = isServer;
 
-    if (!connectDialog()) {
+    if (!connectDialog(RTS_mode)) {
         close();
         return;
     }
@@ -41,7 +41,11 @@ PeerWindow::PeerWindow(QWidget *parent, bool isServer) : BaseMainWindow(parent, 
 
     // Board
     selfColor = peer->getSelfColor();
-    board = new Board(this, selfColor, isPlayingMode);
+    RTS_mode = peer->getRTS_Mode();
+    if (RTS_mode) {
+        setWindowTitle("Online Play Mode (RTS Mode)");
+    }
+    board = new Board(this, selfColor, isPlayingMode, RTS_mode);
     connect(board, &Board::pieceMoved, this, &PeerWindow::pieceMovedSlot);
     bondBoardSlot();
     ui->centerLayout->addWidget(board);
@@ -63,6 +67,7 @@ PeerWindow::PeerWindow(QWidget *parent, bool isServer) : BaseMainWindow(parent, 
 
     // Replay
     replay = new Replay(this, selfColor);
+    replay->setRTS_mode(RTS_mode);
     replay->setSelfName(peer->getNickname());
     connect(peer, &Peer::receivedOppNickname, replay, &Replay::setOppName);
 
@@ -116,7 +121,7 @@ PeerWindow::~PeerWindow() {
     delete peer;
 }
 
-bool PeerWindow::connectDialog() {
+bool PeerWindow::connectDialog(bool RTS_mode) {
     if (isServer) {
         peer = new Server(this);
     } else {
@@ -146,6 +151,7 @@ bool PeerWindow::connectDialog() {
     if (isServer) {
         // Server
         dlg->setWindowTitle("Host Server");
+        peer->setRTS_Mode(RTS_mode);
 
         QLabel *label = new QLabel("Waiting connection...");
         QPushButton *rejectButton = new QPushButton("Cancel");

@@ -14,6 +14,7 @@ public:
     Replay(QObject *parent, QString &filename);
     void addMovement(Movement m);
     void replaySave();
+    void setRTS_mode(bool RTS_mode);
 
     Piece_Color getSelfColor();
     QList<Movement> getMovementList();
@@ -22,6 +23,7 @@ public:
     void setOppName(QString newOppName);
 
 private:
+    bool RTS_mode = false;
     QFile::OpenModeFlag mode;
     QList<Movement> movementList;
     Piece_Color selfColor;

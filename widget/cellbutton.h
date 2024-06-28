@@ -12,6 +12,7 @@ public:
     Position getPos();
     void paintColor(int r, int g, int b, int a);
     void clearColor();
+    void setBlack();
 
 signals:
     void rightClicked();

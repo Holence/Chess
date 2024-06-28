@@ -1,13 +1,13 @@
 #include "singleplayerwindow.h"
 
-SinglePlayerWindow::SinglePlayerWindow(QWidget *parent) : BaseMainWindow(parent, true) {
+SinglePlayerWindow::SinglePlayerWindow(QWidget *parent, bool RTS_mode) : BaseMainWindow(parent, true) {
     setWindowTitle("Single Player Mode");
     setFixedSize(800, 846);
     ui->statusBar->hide();
 
     selfColor = Piece_Color::White;
 
-    board = new Board(this, selfColor, isPlayingMode);
+    board = new Board(this, selfColor, isPlayingMode, RTS_mode);
     connect(board, &Board::pieceMoved, this, &SinglePlayerWindow::pieceMovedSlot);
     bondBoardSlot();
     ui->centerLayout->addWidget(board);

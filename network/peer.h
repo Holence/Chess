@@ -24,6 +24,7 @@ public:
 
     int getPort();
     Piece_Color getSelfColor();
+    bool getRTS_Mode();
     QString getNickname();
 
 signals:
@@ -40,11 +41,13 @@ signals:
     void receivedOppNickname(QString nickname);
 public slots:
     void setSelfColor(Piece_Color color);
+    void setRTS_Mode(bool RTS_mode);
     void setNickname(QString nickname);
 
 protected:
     bool isServer;
     Piece_Color selfColor;
+    bool RTS_mode;
     void bondSocketSignalSlot();
     void sendInializePack();
     void handleDataIn();

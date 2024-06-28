@@ -8,7 +8,7 @@
 
 class PeerWindow : public BaseMainWindow {
 public:
-    PeerWindow(QWidget *parent, bool server);
+    PeerWindow(QWidget *parent, bool server, bool RTS_mode);
     ~PeerWindow();
 
 protected slots:
@@ -23,7 +23,7 @@ protected slots:
 private:
     ChatBox *chatbox;
     bool isServer;
-    bool connectDialog();
+    bool connectDialog(bool RTS_mode);
     Peer *peer;
     Piece_Color currentColor; // 目前轮到的颜色
 

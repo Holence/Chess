@@ -1,7 +1,7 @@
 #include "replaywindow.h"
 #include "replay.h"
 
-ReplayWindow::ReplayWindow(QWidget *parent, QString &filename) : BaseMainWindow(parent, false) {
+ReplayWindow::ReplayWindow(QWidget *parent, QString &filename, bool RTS_mode) : BaseMainWindow(parent, false) {
     setWindowTitle("Replay Mode");
     setFixedSize(800, 846);
     ui->statusBar->hide();
@@ -9,7 +9,7 @@ ReplayWindow::ReplayWindow(QWidget *parent, QString &filename) : BaseMainWindow(
     Replay replay = Replay(this, filename);
     selfColor = replay.getSelfColor();
 
-    board = new Board(this, selfColor, isPlayingMode);
+    board = new Board(this, selfColor, isPlayingMode, RTS_mode);
     bondBoardSlot();
     ui->centerLayout->addWidget(board);
 
