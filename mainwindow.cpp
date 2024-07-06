@@ -59,7 +59,7 @@ MainWindow::MainWindow(QWidget *parent)
         msg.setWindowTitle("About");
         msg.setTextFormat(Qt::RichText);
         msg.setIconPixmap(QPixmap(":/img/wn.png").scaled(64, 64));
-        msg.setText("Author: Holence<br><br>Github: <a href='https://github.com/Holence/Chess/'>Repo</a>");
+        msg.setText("Version: 1.1.0.0<br><br>Author: Holence<br><br>Github: <a href='https://github.com/Holence/Chess/'>Repo</a>");
         msg.setStandardButtons(QMessageBox::Ok);
         msg.exec();
     });

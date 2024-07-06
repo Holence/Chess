@@ -147,10 +147,21 @@ GameState Engine::checkGameState(Piece_Color color) {
     if (l.isEmpty()) {
         return WinState;
     } else {
-        if (hasMoveChance)
-            return GameState::Unfinished;
-        else
+        if (hasMoveChance) {
+            // 如果双方只剩bishop，而且处在不同的颜色
+            if (WhitePieces.length() == 1 and BlackPieces.length() == 1) {
+                if (WhitePieces.at(0)->getType() == Piece_Type::bishop and BlackPieces.at(0)->getType() == Piece_Type::bishop) {
+                    if (WhitePieces.at(0)->isDarkColor() != BlackPieces.at(0)->isDarkColor()) {
+                        return GameState::Draw;
+                    }
+                }
+                return GameState::Unfinished;
+            } else {
+                return GameState::Unfinished;
+            }
+        } else {
             return GameState::Draw;
+        }
     }
 #endif
 }

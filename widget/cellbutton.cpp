@@ -20,7 +20,7 @@ void CellButton::clearColor() {
 }
 
 void CellButton::setBlack() {
-    setStyleSheet("background-color: rgba(0,0,0,255);");
+    setStyleSheet("background-color: rgba(69,70,79,255);");
 }
 
 void CellButton::mousePressEvent(QMouseEvent *e) {

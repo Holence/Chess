@@ -2,8 +2,6 @@
 
 A chess game made with Qt, supporting multiplayer LAN play.
 
-![demo](demo.jpg)
-
 ## Features
 
 - Single Player Mode (Simulate White & Black)
@@ -16,10 +14,21 @@ A chess game made with Qt, supporting multiplayer LAN play.
   - Taunt you opponent using F1-F8 key
 - Replay Mode
 
+Also there are two Game Version
+
+- `Chess.exe`: Normal Chess
+
+  ![demo](demo/demo.jpg)
+
+- `Chess-RTS.exe`: RTS Mode. King can be eaten, and when your King is dead, you can only see the area that your pieces can move to, other place will be dark. In the end, the player whose pieces are all eaten will lose.
+
+  ![demo-RTS](demo/demo-RTS.jpg)
+
 ## TODO
 
-- AI Bot
+- Replay Previous Move
 - Frameless Window
+- ~~AI Bot~~
 
 ## Source
 
