@@ -16,7 +16,7 @@ MainWindow::MainWindow(QWidget *parent)
 #ifndef RTS_MODE
     setWindowTitle("Chess");
 #else
-    setWindowTitle("Chess - RTS");
+    setWindowTitle("Chess [RTS]");
 #endif
 
     setMinimumWidth(250);

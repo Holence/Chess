@@ -28,7 +28,13 @@ void Peer::disconnectSocket() {
  * 初始化，互相给对方传对方的color
  */
 void Peer::sendInializePack() {
-    handleDataOut("0" + QString(flipPieceColor(selfColor)));
+    QString s = "0" + QString(flipPieceColor(selfColor));
+#ifndef RTS_MODE
+    s += "0";
+#else
+    s += "1";
+#endif
+    handleDataOut(s);
 }
 
 /**
@@ -82,33 +88,54 @@ void Peer::handleDataIn() {
         if (!s.isEmpty()) {
             QString op = s.mid(1);
             switch (s.at(0).digitValue()) {
-            case 0:
-                if (!op.isEmpty()) {
-                    if (!isServer) {
-                        // client收到自己的颜色
-                        if (op == 'w')
-                            setSelfColor(Piece_Color::White);
-                        else
-                            setSelfColor(Piece_Color::Black);
-                        // 发回给server进行确认
-                        sendInializePack();
-                        emit connectionSuccessed();
-                    } else {
-                        // server收到颜色确认
-                        if (op == selfColor) {
-                            emit connectionSuccessed();
 
+            case 0: // initial pack
+
+                // op = "[bw][01]"
+                if (!op.isEmpty()) {
+
+#ifndef RTS_MODE
+                    if (op.at(1) != "0") {
+#else
+                    if (op.at(1) != "1") {
+#endif
+                        if (!isServer) {
+                            // client收到
+                            emit socketError("Game Version does not match!");
+                            sendInializePack();
+                            tcpSocket->disconnectFromHost();
                         } else {
-                            emit socketError("Color not match!!!");
+                            tcpSocket = nullptr;
+                        }
+                    } else {
+                        if (!isServer) {
+                            // client收到自己的颜色
+                            if (op.at(0) == 'w')
+                                setSelfColor(Piece_Color::White);
+                            else
+                                setSelfColor(Piece_Color::Black);
+                            // 发回给server进行确认
+                            sendInializePack();
+                            emit connectionSuccessed();
+                        } else {
+                            // server收到颜色确认
+                            if (op.at(0) == selfColor) {
+                                emit connectionSuccessed();
+                            } else {
+                                emit socketError("Color not match!!!");
+                            }
                         }
                     }
                 } else {
+                    // op = ""
+                    // Ready To Receive
                     timer->start();
                     sendPing();
                     sendNickname();
                 }
                 break;
-            case 1:
+
+            case 1: // ping pack from server
                 if (!isServer) {
                     // client收到server发来的ping package，直接返还
                     handleDataOut(s);
@@ -117,7 +144,8 @@ void Peer::handleDataIn() {
                     emit receivedTime((QDateTime::currentMSecsSinceEpoch() - op.toLongLong()) / 2);
                 }
                 break;
-            case 2:
+
+            case 2: // ping pack from client
                 if (isServer) {
                     // server收到client发来的ping package，直接返还
                     handleDataOut(s);
@@ -126,21 +154,27 @@ void Peer::handleDataIn() {
                     emit receivedTime((QDateTime::currentMSecsSinceEpoch() - op.toLongLong()) / 2);
                 }
                 break;
-            case 3:
+
+            case 3: // nickname
                 emit receivedOppNickname(op);
                 break;
-            case 5:
+
+            case 5: // movement
                 emit receivedMovement(Movement::fromString(op));
                 break;
-            case 7:
+
+            case 7: // taunt
                 emit receivedTaunt(op.split(" ").at(0), op.split(" ").at(1).toInt());
                 break;
-            case 8:
+
+            case 8: // text message
                 emit receivedMessage(op);
                 break;
-            case 9:
+
+            case 9: // resign
                 emit receivedResign();
                 break;
+
             default:
                 break;
             }

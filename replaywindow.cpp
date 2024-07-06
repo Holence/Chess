@@ -5,7 +5,7 @@ ReplayWindow::ReplayWindow(QWidget *parent, QString &filename) : BaseMainWindow(
 #ifndef RTS_MODE
     setWindowTitle("Replay Mode");
 #else
-    setWindowTitle("Replay Mode - Self Vision");
+    setWindowTitle("Replay Mode [RTS] - Self Vision");
 #endif
     setFixedSize(800, 846);
     ui->statusBar->hide();

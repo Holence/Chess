@@ -23,7 +23,11 @@ QMap<QString, QString> countryMap = {
 };
 
 PeerWindow::PeerWindow(QWidget *parent, bool isServer) : BaseMainWindow(parent, true) {
+#ifndef RTS_MODE
     setWindowTitle("Online Play Mode");
+#else
+    setWindowTitle("Online Play Mode [RTS]");
+#endif
     setFixedSize(800, 862);
 
     settings = new QSettings("settings.ini", QSettings::IniFormat, this);
