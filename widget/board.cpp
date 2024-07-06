@@ -78,10 +78,7 @@ Board::Board(QWidget *parent, Piece_Color selfColor, bool isPlayingMode)
 
 Board::~Board() {
     cellCanceled();
-    for (int i = 0; i < 64; i++) {
-        cellArray[i]->deleteLater();
-    }
-    delete cellArray;
+    delete[] cellArray;
 }
 
 /**
@@ -100,6 +97,60 @@ void Board::flipSelfColor() {
  * @param promoteType
  */
 void Board::movePiece(Movement m) {
+    movePieceHandler(m, false);
+}
+
+void Board::cellSelected(Position pos) {
+    CellButton *current_select_btn = getCellBtn(pos);
+
+    // 之前有选中有效的棋子 且 当前点的是可行的走位，则移动棋子
+    if (selectedCell and movableCellList.contains(current_select_btn)) {
+
+        Piece_Type promoteType;
+        if (selectedPiece->getType() == Piece_Type::pawn and ((Pawn *)selectedPiece)->isReadyToPromote()) {
+            // Pawn Promote
+            promoteType = getPawnPromotion();
+        } else {
+            promoteType = Piece_Type::null;
+        }
+        Movement m{translatePos(selectedCell->getPos()), translatePos(pos), promoteType};
+
+        if (needConfirm and !getConfirm(m)) {
+            return;
+        }
+        movePieceHandler(m, true);
+    }
+    // 否则尝试展示可行的走位
+    else {
+        cellCanceled();
+        paintTrace();
+        selectedPiece = engine.getPiece(translatePos(pos));
+        // 如果选中棋子 且 选中了己方的棋子
+        if (selectedPiece and selectedPiece->getColor() == selfColor) {
+            // 获取可行的走位
+            QList<Position> l = translatePosList(engine.getPossibleMove(translatePos(pos)));
+            if (l.isEmpty()) {
+                // 选的棋子没有可行的走位
+                selectedCell = nullptr;
+            } else {
+                selectedCell = current_select_btn;
+                foreach (Position pos, l) {
+                    // 标为绿色
+                    CellButton *btn = getCellBtn(pos);
+                    btn->paintColor(0, 255, 0, 63);
+                    movableCellList.append(btn);
+                }
+            }
+        }
+    }
+}
+
+/**
+ *
+ * @param m 内含的pos是标准pos
+ * @param isMyOperation
+ */
+void Board::movePieceHandler(Movement m, bool isMyOperation) {
     Position pos_from = m.pos_from;
     Position pos_to = m.pos_to;
     Piece *p_move = engine.getPiece(pos_from);
@@ -121,98 +172,18 @@ void Board::movePiece(Movement m) {
     pos_to = translatePos(pos_to);
 
     // 清空上次的痕迹
-    foreach (CellButton *btn, traceCellList) {
-        btn->clearColor();
+    foreach (QPair trace_pair, traceCellList) {
+        trace_pair.first->clearColor();
     }
     traceCellList.clear();
     // 记录走位留下的痕迹，第一个是from，第二个是to
-    traceCellList.append(getCellBtn(pos_from));
-    traceCellList.append(getCellBtn(pos_to));
+    traceCellList.append(QPair(getCellBtn(pos_from), true));
+    traceCellList.append(QPair(getCellBtn(pos_to), true));
 
-    // 刷新棋盘画面
-    updateCellIcon(pos_from);
-    updateCellIcon(pos_to);
-    if (p_move->getType() != Piece_Type::king) {
-        // 为了那狗屎的EnPassant，我也懒得设计其他接口，也不想每次都对整个棋盘全部刷新，这里额外刷新pos_from左右两侧的格子🤣
-        if (pos_from.x > 1)
-            updateCellIcon(Position{pos_from.x - 1, pos_from.y});
-        if (pos_from.x < 8)
-            updateCellIcon(Position{pos_from.x + 1, pos_from.y});
-    } else {
-        // 还有王车易位，直接刷新一整行算了
-        for (int i = 1; i <= 8; i++) {
-            updateCellIcon(Position{i, pos_from.y});
-        }
-        // 王车易位
-        if (std::abs(pos_to.x - pos_from.x) == 2) {
-            media_path = "qrc:/sound/castle.mp3";
-        }
-    }
-
-    // 检查是否game over
-    GameState state = engine.checkGameState(p_move->getColor());
-    if (engine.getBeingCheckmated()) {
-        media_path = "qrc:/sound/move-check.mp3";
-    }
-
-    if (media_path.isEmpty()) {
-        media_path = "qrc:/sound/move-opponent.mp3";
-    }
-
-    playMedia(media_path);
-    if (state == GameState::WhiteWin or state == GameState::BlackWin or state == GameState::Draw) {
-        emit gameEnded(state);
-    }
-
-    cellCanceled();
-}
-
-void Board::cellSelected(Position pos) {
-    CellButton *current_select_btn = getCellBtn(pos);
-    QString media_path("");
-
-    // 之前有选中有效的棋子 且 当前点的是可行的走位，则移动棋子
-    if (selectedCell and movableCellList.contains(current_select_btn)) {
-
-        Position pos_from = selectedCell->getPos();
-        Position pos_to = pos;
-
-        Piece_Type promoteType;
-        if (selectedPiece->getType() == Piece_Type::pawn and ((Pawn *)selectedPiece)->isReadyToPromote()) {
-            // Pawn Promote
-            promoteType = getPawnPromotion();
-            media_path = "qrc:/sound/promote.mp3";
-        } else {
-            promoteType = Piece_Type::null;
-        }
-
-        Movement m{translatePos(pos_from), translatePos(pos_to), promoteType};
-
-        if (needConfirm) {
-            if (!getConfirm(m)) {
-                return;
-            }
-        }
-
-        Piece *p_eaten = engine.movePiece(m);
-        if (p_eaten) {
-            media_path = "qrc:/sound/capture.mp3";
-            emit pieceEaten(p_eaten);
-        }
-
-        // 清空上次的痕迹
-        foreach (CellButton *btn, traceCellList) {
-            btn->clearColor();
-        }
-        traceCellList.clear();
-        // 记录走位留下的痕迹，第一个是from，第二个是to
-        traceCellList.append(getCellBtn(pos_from));
-        traceCellList.append(current_select_btn);
-
-        // 刷新棋盘画面
+    auto partial_update = [&] {
         updateCellIcon(pos_from);
         updateCellIcon(pos_to);
-        if (selectedPiece->getType() != Piece_Type::king) {
+        if (p_move->getType() != Piece_Type::king) {
             // 为了那狗屎的EnPassant，我也懒得设计其他接口，也不想每次都对整个棋盘全部刷新，这里额外刷新pos_from左右两侧的格子🤣
             if (pos_from.x > 1)
                 updateCellIcon(Position{pos_from.x - 1, pos_from.y});
@@ -228,46 +199,42 @@ void Board::cellSelected(Position pos) {
                 media_path = "qrc:/sound/castle.mp3";
             }
         }
+    };
 
-        // 检查是否game over
-        GameState state = engine.checkGameState(selectedPiece->getColor());
-        if (engine.getBeingCheckmated()) {
-            media_path = "qrc:/sound/move-check.mp3";
-        }
+    cellCanceled();
 
-        if (media_path.isEmpty()) {
+// 刷新棋盘画面
+#ifndef RTS_MODE
+    partial_update();
+#else
+    if (engine.isKingAlive(selfColor)) {
+        partial_update();
+    } else {
+        drawBoardBlind();
+    }
+#endif
+
+    // 检查是否game over
+    GameState state = engine.checkGameState(p_move->getColor());
+    if (engine.isBeingCheckmated(flipPieceColor(p_move->getColor()))) {
+        media_path = "qrc:/sound/move-check.mp3";
+    }
+
+    if (media_path.isEmpty()) {
+        if (isMyOperation)
             media_path = "qrc:/sound/move-self.mp3";
-        }
-        playMedia(media_path);
+        else
+            media_path = "qrc:/sound/move-opponent.mp3";
+    }
 
+    playMedia(media_path);
+    if (isMyOperation)
         emit pieceMoved(m);
-        if (state == GameState::WhiteWin or state == GameState::BlackWin or state == GameState::Draw) {
-            emit gameEnded(state);
-        }
-        cellCanceled();
+    if (state == GameState::WhiteWin or state == GameState::BlackWin or state == GameState::Draw) {
+        emit gameEnded(state);
     }
-    // 否则尝试展示可行的走位
-    else {
-        cellCanceled();
-        selectedPiece = engine.getPiece(translatePos(pos));
-        // 如果选中棋子 且 选中了己方的棋子
-        if (selectedPiece and selectedPiece->getColor() == selfColor) {
-            // 获取可行的走位
-            QList<Position> l = translatePosList(engine.getPossibleMove(translatePos(pos)));
-            if (l.isEmpty()) {
-                // 选的棋子没有可行的走位
-                selectedCell = nullptr;
-            } else {
-                selectedCell = current_select_btn;
-                foreach (Position pos, l) {
-                    // 标为绿色
-                    CellButton *btn = getCellBtn(pos);
-                    btn->paintColor(0, 255, 0, 63);
-                    movableCellList.append(btn);
-                }
-            }
-        }
-    }
+
+    paintTrace();
 }
 
 Piece_Type Board::getPawnPromotion() {
@@ -307,10 +274,15 @@ void Board::cellCanceled() {
         }
         movableCellList.clear();
     }
+}
+
+void Board::paintTrace() {
     int a = 63;
-    foreach (CellButton *btn, traceCellList) {
+    foreach (QPair trace_pair, traceCellList) {
         // 标为黄色
-        btn->paintColor(255, 255, 0, a);
+        if (trace_pair.second) {
+            trace_pair.first->paintColor(255, 255, 0, a);
+        }
         a += 64;
     }
 }
@@ -324,7 +296,7 @@ void Board::updateCellIcon(Position pos) {
             getCellBtn(pos)->setIcon(QIcon(BlackIcon.value(p->getType())));
         }
     } else {
-        getCellBtn(pos)->setIcon(QIcon(QString()));
+        getCellBtn(pos)->setIcon(QIcon());
     }
 }
 
@@ -345,21 +317,47 @@ void Board::drawBoard() {
     }
 }
 
+void Board::drawBoardBlind() {
+    for (int i = 0; i < 64; i++) {
+        cellArray[i]->setBlack();
+        cellArray[i]->setIcon(QIcon());
+    }
+    QList<Position> l = translatePosList(engine.getVisibleArea(selfColor));
+    foreach (Position pos, l) {
+        updateCellIcon(pos);
+        getCellBtn(pos)->clearColor();
+    }
+    for (int i = 0; i < 2; i++) {
+        if (!l.contains(traceCellList[i].first->getPos()))
+            traceCellList[i].second = false;
+    }
+}
+
 void Board::flipBoard() {
     boardFilpped = !boardFilpped;
-    drawBoard();
 
     // 翻转后指向的btn也要翻转
     if (!traceCellList.isEmpty()) {
-        QList<CellButton *> traceCellList_copy = traceCellList;
+        QList<QPair<CellButton *, bool>> traceCellList_copy = traceCellList;
         traceCellList.clear();
-        foreach (CellButton *btn, traceCellList_copy) {
-            btn->clearColor();
-            traceCellList.append(getCellBtn(btn->getPos().flipSide()));
+        foreach (QPair trace_pair, traceCellList_copy) {
+            trace_pair.first->clearColor();
+            traceCellList.append(QPair(getCellBtn(trace_pair.first->getPos().flipSide()), trace_pair.second));
         }
     }
 
+#ifndef RTS_MODE
+    drawBoard();
+#else
+    if (engine.isKingAlive(selfColor)) {
+        drawBoard();
+    } else {
+        drawBoardBlind();
+    }
+#endif
+
     cellCanceled();
+    paintTrace();
 }
 
 /**

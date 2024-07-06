@@ -4,7 +4,7 @@ bool Position::isValid() {
     return x >= 1 and x <= 8 and y >= 1 and y <= 8;
 }
 
-int Position::toIndex() {
+int Position::toIndex() const {
     return x - 1 + (y - 1) * 8;
 }
 

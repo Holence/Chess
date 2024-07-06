@@ -190,7 +190,11 @@ bool PeerWindow::connectDialog() {
         ip_edit->setPlaceholderText("hostname or ip");
 
         QLabel *port_label = new QLabel("Server Port");
+#ifndef RTS_MODE
         QLineEdit *port_edit = new QLineEdit("11451");
+#else
+        QLineEdit *port_edit = new QLineEdit("11452");
+#endif
         port_edit->setPlaceholderText("port");
 
         QPushButton *connectButton = new QPushButton("Connect");

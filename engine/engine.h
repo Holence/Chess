@@ -23,9 +23,11 @@ public:
     GameState checkGameState(Piece_Color color);
 
     QList<Position> getPossibleMove(Position pos);
+    QList<Position> getVisibleArea(Piece_Color color);
     Piece *getPiece(Position pos);
 
-    bool getBeingCheckmated();
+    bool isBeingCheckmated(Piece_Color color);
+    bool isKingAlive(Piece_Color color);
 
 private:
     Cell *board = nullptr; // board是指向Cell array的指针
@@ -36,7 +38,6 @@ private:
 
     Piece *WhiteKing = nullptr;
     Piece *BlackKing = nullptr;
-    bool beingCheckmated = false;
 
     void placePiece(Piece_Color color, bool reversed);
     void putPiece(Piece *p, Position pos);
@@ -44,7 +45,6 @@ private:
 
     int caclPressure(Position pos, Piece_Color color);
     bool hasPressure(Position pos, Piece_Color color);
-    bool isBeingCheckmated(Piece_Color color);
 
     QList<Position> getAttackingPos(Piece *p);
     QList<Position> getMovablePos(Piece *p);

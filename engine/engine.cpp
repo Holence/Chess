@@ -103,13 +103,6 @@ Engine::~Engine() {
  * @return
  */
 GameState Engine::checkGameState(Piece_Color color) {
-    // 移动一步后，自己不可能被将，只需要查看对方的状态
-    // 如果对方没有棋能动
-    //    如果对方被将，则自己赢了
-    //    如果对方没被将，则平局
-    // 如果对方有棋能动，如果不是特殊情况的平局，则继续
-
-    Piece_Color oppColor = flipPieceColor(color);
     QList<Piece *> l;
     GameState WinState;
     if (color == Piece_Color::White) {
@@ -120,7 +113,15 @@ GameState Engine::checkGameState(Piece_Color color) {
         WinState = GameState::BlackWin;
     }
 
-    beingCheckmated = isBeingCheckmated(oppColor);
+#ifndef RTS_MODE
+    // 移动一步后，自己不可能被将，只需要查看对方的状态
+    // 如果对方没有棋能动
+    //    如果对方被将，则自己赢了
+    //    如果对方没被将，则平局
+    // 如果对方有棋能动，如果不是特殊情况的平局，则继续
+
+    Piece_Color oppColor = flipPieceColor(color);
+
     bool hasMoveChance = false;
     foreach (Piece *p, l) {
         if (!getMovablePos(p).isEmpty()) {
@@ -128,19 +129,27 @@ GameState Engine::checkGameState(Piece_Color color) {
             break;
         }
     }
+
     if (hasMoveChance) {
         if (checkOtherDraw())
             return GameState::Draw;
         else
             return GameState::Unfinished;
     } else {
-        if (beingCheckmated) {
+        if (isBeingCheckmated(oppColor)) {
             // 对方输了
             return WinState;
         } else {
             return GameState::Draw;
         }
     }
+#else
+    if (l.isEmpty()) {
+        return WinState;
+    } else {
+        return GameState::Unfinished;
+    }
+#endif
 }
 
 bool Engine::checkOtherDraw() {
@@ -239,12 +248,17 @@ QList<Position> Engine::getAttackingPos(Piece *p) {
                     } else {
                         // 遇到对方的，加上这个位置
                         l.append(pos_check);
-                        if (p_check->getType() == Piece_Type::king)
+#ifndef RTS_MODE
+                        // 正常模式中
+                        if (p_check->getType() == Piece_Type::king) {
                             // 如果是对方的King，则后方也是势力范围
+                            // 例如用车将对方的老王，则在这一整行/列上对方的老王都不能待着，也就是说这时候的车对老王后方的区域也有压力
                             continue;
-                        else
-                            // 否则，退出这个方向
-                            break;
+                        }
+#endif
+                        // （RTS_MODE中老王可以被吃，所以跟普通的棋子作用一样）
+                        // 否则，退出这个方向
+                        break;
                     }
                 } else {
                     // 遇到空位，加上这个位置，继续这个方向
@@ -317,16 +331,19 @@ QList<Position> Engine::getMovablePos(Piece *p) {
 
     // 如果是King，则不能走向对方的势力范围
     if (p->getType() == Piece_Type::king) {
+
+#ifndef RTS_MODE
+        // 正常模式，老王不能走向对方的势力范围
         QList<Position> l_copy = l;
         l.clear();
         foreach (Position pos, l_copy) {
             if (!hasPressure(pos, flipPieceColor(pieceColor)))
                 l.append(pos);
         }
-
+#endif
         // 王车易位
         // 王没动过 且 没被将军
-        if (((King *)p)->getMoved() == false and !beingCheckmated) {
+        if (((King *)p)->getMoved() == false and !isBeingCheckmated(pieceColor)) {
             // 左边的车
             // 左边三格都空
             if (!getPiece(Position{piecePos.x - 1, piecePos.y}) and !getPiece(Position{piecePos.x - 2, piecePos.y}) and !getPiece(Position{piecePos.x - 3, piecePos.y})) {
@@ -358,7 +375,8 @@ QList<Position> Engine::getMovablePos(Piece *p) {
         }
 
     } else {
-        // 被将军时，其他兵只能保护老王
+#ifndef RTS_MODE
+        // 正常模式中，被将军时，其他兵需要能保护老王
         // 如果没被将军，但顶在老王前面，某些移动的方向也会导致老王被将军，这些位置也不可以去
         // 所以不管是否被将军，都要保证：走出一步后，老王是安全的
         QList<Position> l_copy = l;
@@ -414,6 +432,7 @@ QList<Position> Engine::getMovablePos(Piece *p) {
                 putPiece(p_to, p_to->getPos());
             }
         }
+#endif
     }
 
     return l;
@@ -426,6 +445,22 @@ QList<Position> Engine::getPossibleMove(Position pos) {
     } else {
         return QList<Position>();
     }
+}
+
+QList<Position> Engine::getVisibleArea(Piece_Color color) {
+    QSet<Position> res;
+    QList<Piece *> *l;
+    if (color == Piece_Color::White)
+        l = &WhitePieces;
+    else
+        l = &BlackPieces;
+    foreach (Piece *p, *l) {
+        foreach (Position pos, getMovablePos(p)) {
+            res.insert(pos);
+        }
+        res.insert(p->getPos());
+    }
+    return res.values();
 }
 
 /**
@@ -532,9 +567,17 @@ Piece *Engine::movePiece(Movement m) {
         if (p_to->getColor() == Piece_Color::White) {
             WhitePieces.removeOne(p_to);
             WhiteDeadPieces.append(p_to);
+#ifdef RTS_MODE
+            if (p_to->getType() == Piece_Type::king)
+                WhiteKing = nullptr;
+#endif
         } else {
             BlackPieces.removeOne(p_to);
             BlackDeadPieces.append(p_to);
+#ifdef RTS_MODE
+            if (p_to->getType() == Piece_Type::king)
+                BlackKing = nullptr;
+#endif
         }
     }
 
@@ -548,8 +591,11 @@ Piece *Engine::getPiece(Position pos) {
     return board[pos.toIndex()];
 }
 
-bool Engine::getBeingCheckmated() {
-    return beingCheckmated;
+bool Engine::isKingAlive(Piece_Color color) {
+    if (color == Piece_Color::White)
+        return WhiteKing != nullptr;
+    else
+        return BlackKing != nullptr;
 }
 
 /**
@@ -624,11 +670,19 @@ bool Engine::hasPressure(Position pos, Piece_Color color) {
  * @return
  */
 bool Engine::isBeingCheckmated(Piece_Color color) {
+    Piece_Color oppColor = flipPieceColor(color);
+#ifndef RTS_MODE
     if (color == Piece_Color::White) {
-        return hasPressure(WhiteKing->getPos(), flipPieceColor(color));
+        return hasPressure(WhiteKing->getPos(), oppColor);
     } else {
-        return hasPressure(BlackKing->getPos(), flipPieceColor(color));
+        return hasPressure(BlackKing->getPos(), oppColor);
     }
+#else
+    if (color == Piece_Color::White)
+        return WhiteKing != nullptr and hasPressure(WhiteKing->getPos(), oppColor);
+    else
+        return BlackKing != nullptr and hasPressure(BlackKing->getPos(), oppColor);
+#endif
 }
 
 // TODO AI Bot

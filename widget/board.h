@@ -10,7 +10,7 @@
 class Board : public QWidget {
     Q_OBJECT
 public:
-    Board(QWidget *parent, Piece_Color selfColor, bool isPlayingMode = true);
+    Board(QWidget *parent, Piece_Color selfColor, bool isPlayingMode);
     ~Board();
 
     static const QMap<Piece_Type, QString> WhiteIcon, BlackIcon;
@@ -40,6 +40,7 @@ signals:
 private slots:
     void cellSelected(Position pos);
     void cellCanceled();
+    void paintTrace();
 
 private:
     Engine engine;
@@ -49,16 +50,18 @@ private:
 
     void updateCellIcon(Position pos);
     void drawBoard();
+    void drawBoardBlind();
 
     CellButton **cellArray = nullptr;
     CellButton *getCellBtn(Position pos);
 
+    void movePieceHandler(Movement m, bool isMyOperation);
     Piece_Type getPawnPromotion();
 
     CellButton *selectedCell = nullptr;
     Piece *selectedPiece = nullptr;
-    QList<CellButton *> movableCellList; // 当前选中的棋子的可行走位
-    QList<CellButton *> traceCellList;   // 对方上一步的起点和终点
+    QList<CellButton *> movableCellList;            // 当前选中的棋子的可行走位
+    QList<QPair<CellButton *, bool>> traceCellList; // 对方上一步的起点和终点（RTS_Mode中，如果位于黑影中就不要显示，bool会记录是否需要显示，正常模式中bool变量没有任何作用）
 
     Position translatePos(Position pos);
     QList<Position> translatePosList(QList<Position> posList);
