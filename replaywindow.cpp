@@ -2,7 +2,11 @@
 #include "replay.h"
 
 ReplayWindow::ReplayWindow(QWidget *parent, QString &filename) : BaseMainWindow(parent, false) {
+#ifndef RTS_MODE
     setWindowTitle("Replay Mode");
+#else
+    setWindowTitle("Replay Mode - Self Vision");
+#endif
     setFixedSize(800, 846);
     ui->statusBar->hide();
 
@@ -20,6 +24,34 @@ ReplayWindow::ReplayWindow(QWidget *parent, QString &filename) : BaseMainWindow(
 
     movementList = replay.getMovementList();
     replayIndex = -1;
+
+#ifdef RTS_MODE
+    actionChange_Vision.setText("Change Vision");
+    ui->menuGame->addAction(&actionChange_Vision);
+    actionChange_Vision.setShortcut(tr("F"));
+    connect(&actionChange_Vision, &QAction::triggered, this, [this] {
+        vision_mode = (vision_mode + 1) % 3;
+        switch (vision_mode) {
+        case 0:
+            board->setSelfColor(selfColor);
+            board->setAllBoardVision(false);
+            setWindowTitle("Replay Mode - Self Vision");
+            break;
+        case 1:
+            board->setSelfColor(flipPieceColor(selfColor));
+            board->setAllBoardVision(false);
+            setWindowTitle("Replay Mode - Opponent Vision");
+            break;
+        case 2:
+            board->setAllBoardVision(true);
+            setWindowTitle("Replay Mode - Full Vision");
+            break;
+        default:
+            break;
+        }
+        board->refreshBoard();
+    });
+#endif
 }
 
 void ReplayWindow::ReplayNextMove() {

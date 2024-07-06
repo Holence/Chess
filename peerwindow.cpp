@@ -252,6 +252,7 @@ void PeerWindow::pieceMovedSlot(Movement m) {
     replay->addMovement(m);
     peer->sendMovement(m);
     currentColor = flipPieceColor(currentColor);
+    // 更新是否允许点击事件
     board->setAttribute(Qt::WA_TransparentForMouseEvents, currentColor != selfColor);
 }
 
@@ -259,6 +260,7 @@ void PeerWindow::receivedMovementSlot(Movement m) {
     replay->addMovement(m);
     board->movePiece(m);
     currentColor = flipPieceColor(currentColor);
+    // 更新是否允许点击事件
     board->setAttribute(Qt::WA_TransparentForMouseEvents, currentColor != selfColor);
 }
 

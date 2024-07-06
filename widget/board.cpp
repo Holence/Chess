@@ -35,6 +35,7 @@ Board::Board(QWidget *parent, Piece_Color selfColor, bool isPlayingMode)
     : QWidget(parent), engine() {
 
     this->selfColor = selfColor;
+    this->isPlayingMode = isPlayingMode;
 
     // draw board
     setFixedSize(QSize(800, 800));
@@ -207,12 +208,19 @@ void Board::movePieceHandler(Movement m, bool isMyOperation) {
 #ifndef RTS_MODE
     partial_update();
 #else
-    if (engine.isKingAlive(selfColor)) {
+    if (!isPlayingMode and allBoardVision) {
         partial_update();
     } else {
-        drawBoardBlind();
+        if (engine.isKingAlive(selfColor)) {
+            partial_update();
+        } else {
+            drawBoardBlind();
+        }
     }
 #endif
+
+    // RTS Mode中要等drawBoardBlind设定trace是否可视
+    paintTrace();
 
     // 检查是否game over
     GameState state = engine.checkGameState(p_move->getColor());
@@ -233,8 +241,6 @@ void Board::movePieceHandler(Movement m, bool isMyOperation) {
     if (state == GameState::WhiteWin or state == GameState::BlackWin or state == GameState::Draw) {
         emit gameEnded(state);
     }
-
-    paintTrace();
 }
 
 Piece_Type Board::getPawnPromotion() {
@@ -287,17 +293,33 @@ void Board::paintTrace() {
     }
 }
 
+void Board::setSelfColor(Piece_Color selfColor) {
+    this->selfColor = selfColor;
+}
+
+#ifdef RTS_MODE
+bool Board::getAllBoardVision() {
+    return allBoardVision;
+}
+
+void Board::setAllBoardVision(bool allBoardVision) {
+    this->allBoardVision = allBoardVision;
+}
+#endif
+
 void Board::updateCellIcon(Position pos) {
     Piece *p = engine.getPiece(translatePos(pos));
+    CellButton *btn = getCellBtn(pos);
     if (p) {
         if (p->getColor() == Piece_Color::White) {
-            getCellBtn(pos)->setIcon(QIcon(WhiteIcon.value(p->getType())));
+            btn->setIcon(QIcon(WhiteIcon.value(p->getType())));
         } else {
-            getCellBtn(pos)->setIcon(QIcon(BlackIcon.value(p->getType())));
+            btn->setIcon(QIcon(BlackIcon.value(p->getType())));
         }
     } else {
-        getCellBtn(pos)->setIcon(QIcon());
+        btn->setIcon(QIcon());
     }
+    btn->clearColor();
 }
 
 CellButton *Board::getCellBtn(Position pos) {
@@ -325,12 +347,34 @@ void Board::drawBoardBlind() {
     QList<Position> l = translatePosList(engine.getVisibleArea(selfColor));
     foreach (Position pos, l) {
         updateCellIcon(pos);
-        getCellBtn(pos)->clearColor();
     }
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < traceCellList.length(); i++) {
         if (!l.contains(traceCellList[i].first->getPos()))
             traceCellList[i].second = false;
     }
+}
+
+void Board::refreshBoard() {
+    // 因为外部调用这个函数，要变换视角
+    // 所以在drawBoardBlind会重新检查trace是否可见
+    for (int i = 0; i < traceCellList.length(); i++) {
+        traceCellList[i].second = true;
+    }
+
+#ifndef RTS_MODE
+    drawBoard();
+#else
+    if (!isPlayingMode and allBoardVision) {
+        drawBoard();
+    } else {
+        if (engine.isKingAlive(selfColor)) {
+            drawBoard();
+        } else {
+            drawBoardBlind();
+        }
+    }
+#endif
+    paintTrace();
 }
 
 void Board::flipBoard() {
@@ -346,18 +390,8 @@ void Board::flipBoard() {
         }
     }
 
-#ifndef RTS_MODE
-    drawBoard();
-#else
-    if (engine.isKingAlive(selfColor)) {
-        drawBoard();
-    } else {
-        drawBoardBlind();
-    }
-#endif
-
     cellCanceled();
-    paintTrace();
+    refreshBoard();
 }
 
 /**

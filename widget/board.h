@@ -13,6 +13,7 @@ public:
     Board(QWidget *parent, Piece_Color selfColor, bool isPlayingMode);
     ~Board();
 
+    void setSelfColor(Piece_Color newSelfColor);
     static const QMap<Piece_Type, QString> WhiteIcon, BlackIcon;
 
     // 单人模拟中要用
@@ -24,10 +25,17 @@ public:
     // Ctrl+F
     void flipBoard();
 
+    void refreshBoard();
+
     void playMedia(QString path);
 
     void setNeedConfirm(bool needConfirm);
     bool getNeedConfirm();
+
+#ifdef RTS_MODE
+    void setAllBoardVision(bool allBoardVision);
+    bool getAllBoardVision();
+#endif
 
 signals:
     // 己方棋子移动后触发，外界绑定后续的操作（to replay、to socket、转换到bot……）
@@ -44,6 +52,11 @@ private slots:
 
 private:
     Engine engine;
+    bool isPlayingMode;
+
+#ifdef RTS_MODE
+    bool allBoardVision = false;
+#endif
 
     Piece_Color selfColor;
     bool boardFilpped;

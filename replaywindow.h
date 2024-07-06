@@ -14,6 +14,11 @@ private:
     void ReplayNextMove();
 
     QAction actionNext_Move;
+
+#ifdef RTS_MODE
+    QAction actionChange_Vision;
+    short vision_mode = 0;
+#endif
 };
 
 #endif // REPLAYWINDOW_H

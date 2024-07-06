@@ -113,6 +113,14 @@ GameState Engine::checkGameState(Piece_Color color) {
         WinState = GameState::BlackWin;
     }
 
+    bool hasMoveChance = false;
+    foreach (Piece *p, l) {
+        if (!getMovablePos(p).isEmpty()) {
+            hasMoveChance = true;
+            break;
+        }
+    }
+
 #ifndef RTS_MODE
     // 移动一步后，自己不可能被将，只需要查看对方的状态
     // 如果对方没有棋能动
@@ -121,14 +129,6 @@ GameState Engine::checkGameState(Piece_Color color) {
     // 如果对方有棋能动，如果不是特殊情况的平局，则继续
 
     Piece_Color oppColor = flipPieceColor(color);
-
-    bool hasMoveChance = false;
-    foreach (Piece *p, l) {
-        if (!getMovablePos(p).isEmpty()) {
-            hasMoveChance = true;
-            break;
-        }
-    }
 
     if (hasMoveChance) {
         if (checkOtherDraw())
@@ -147,7 +147,10 @@ GameState Engine::checkGameState(Piece_Color color) {
     if (l.isEmpty()) {
         return WinState;
     } else {
-        return GameState::Unfinished;
+        if (hasMoveChance)
+            return GameState::Unfinished;
+        else
+            return GameState::Draw;
     }
 #endif
 }
