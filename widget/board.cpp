@@ -58,7 +58,10 @@ Board::Board(QWidget *parent, Piece_Color selfColor, bool isPlayingMode)
             // 播放replay的话，点击棋盘不用互动
             if (isPlayingMode) {
                 connect(btn, &CellButton::leftClicked, this, &Board::cellSelected);
-                connect(btn, &CellButton::rightClicked, this, &Board::cellCanceled);
+                connect(btn, &CellButton::rightClicked, this, [this] {
+                    cellCanceled();
+                    paintTrace();
+                });
             }
             grid->addWidget(btn, 8 - y, x - 1);
             cellArray[pos.toIndex()] = btn;

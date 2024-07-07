@@ -12,6 +12,7 @@ A chess game made with Qt, supporting multiplayer LAN play.
   - Join Server
   - Chat while playing
   - Taunt you opponent using F1-F8 key
+  - Timer
 - Replay Mode
 
 Also there are two Game Version
