@@ -3,7 +3,6 @@
 SinglePlayerWindow::SinglePlayerWindow(QWidget *parent) : BaseMainWindow(parent, true) {
     setWindowTitle("Single Player Mode");
     setFixedSize(800, 846);
-    ui->statusBar->hide();
 
     selfColor = Piece_Color::White;
 

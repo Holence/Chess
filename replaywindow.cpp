@@ -8,7 +8,6 @@ ReplayWindow::ReplayWindow(QWidget *parent, QString &filename) : BaseMainWindow(
     setWindowTitle("Replay Mode [RTS] - Self Vision");
 #endif
     setFixedSize(800, 846);
-    ui->statusBar->hide();
 
     Replay replay = Replay(this, filename);
     selfColor = replay.getSelfColor();

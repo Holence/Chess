@@ -1,6 +1,7 @@
 #include "peerwindow.h"
 #include "network/client.h"
 #include "network/server.h"
+#include "widget/timer.h"
 #include <QComboBox>
 #include <QDialog>
 #include <QDockWidget>
@@ -28,7 +29,7 @@ PeerWindow::PeerWindow(QWidget *parent, bool isServer) : BaseMainWindow(parent, 
 #else
     setWindowTitle("Online Play Mode [RTS]");
 #endif
-    setFixedSize(800, 862);
+    setFixedSize(800, 882);
 
     settings = new QSettings("settings.ini", QSettings::IniFormat, this);
 
@@ -43,6 +44,34 @@ PeerWindow::PeerWindow(QWidget *parent, bool isServer) : BaseMainWindow(parent, 
     connect(peer, &Peer::receivedMovement, this, &PeerWindow::receivedMovementSlot);
     connect(peer, &Peer::receivedResign, this, &PeerWindow::receivedResignSlot);
 
+    ////////////////////////////////////////////////////
+    // Head Info (timer - name - timer)
+    QWidget *head_info = new QWidget();
+    head_info->setStyleSheet("background-color: rgb(96, 67, 44); font-size: 12px; color: rgb(255, 255, 255);");
+    QHBoxLayout *headLayout = new QHBoxLayout();
+    headLayout->setSpacing(0);
+    headLayout->setMargin(0);
+
+    QLabel *label_name = new QLabel();
+    label_name->setAlignment(Qt::AlignCenter);
+    connect(peer, &Peer::receivedOppNickname, this, [this, label_name](QString oppName) {
+        label_name->setText(QString("%1  vs  %2").arg(peer->getNickname(), oppName));
+    });
+
+    Timer *selfTimer = new Timer(3, 0);
+    QSpacerItem *timerSpacer1 = new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Minimum);
+    QSpacerItem *timerSpacer2 = new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Minimum);
+    Timer *oppTimer = new Timer(3, 0);
+    headLayout->addWidget(selfTimer);
+    headLayout->addItem(timerSpacer1);
+    headLayout->addWidget(label_name);
+    headLayout->addItem(timerSpacer2);
+    headLayout->addWidget(oppTimer);
+
+    head_info->setLayout(headLayout);
+    ui->centerLayout->addWidget(head_info);
+
+    ////////////////////////////////////////////////////
     // Board
     selfColor = peer->getSelfColor();
     board = new Board(this, selfColor, isPlayingMode);
@@ -65,23 +94,57 @@ PeerWindow::PeerWindow(QWidget *parent, bool isServer) : BaseMainWindow(parent, 
             return BaseMainWindow::gameEndSlot(GameState::WhiteWin);
     });
 
+    ////////////////////////////////////////////////////
+    // Status Bar
+    QWidget *statusBar = new QWidget();
+    statusBar->setStyleSheet("background-color: rgb(96, 67, 44);font-size: 12px;");
+
+    QHBoxLayout *statusLayout = new QHBoxLayout();
+    statusLayout->setSpacing(0);
+    statusLayout->setMargin(0);
+
+    QLabel *label_info = new QLabel();
+    label_info->setStyleSheet("color: rgb(255, 255, 255);");
+    connect(peer, &Peer::receivedOppNickname, this, [this, label_info] {
+        label_info->setText(QString("%1  |  Latency:  ").arg(peer->getConnectionInfo()));
+    });
+    statusLayout->addWidget(label_info);
+
+    QLabel *label_latency = new QLabel(statusBar);
+    connect(peer, &Peer::receivedTime, this, [label_latency](int latency) {
+        label_latency->setText(QString::number(latency) + "ms");
+        if (latency < 100) {
+            label_latency->setStyleSheet("color: rgb(0,255,0)");
+        } else if (latency < 200) {
+            label_latency->setStyleSheet("color: rgb(255,255,0)");
+        } else {
+            label_latency->setStyleSheet("color: rgb(255,0,0)");
+        }
+    });
+    label_latency->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred));
+    statusLayout->addWidget(label_latency);
+
+    statusBar->setLayout(statusLayout);
+    ui->centralwidget->layout()->addWidget(statusBar);
+
+    ////////////////////////////////////////////////////
     // Replay
     replay = new Replay(this, selfColor);
     replay->setSelfName(peer->getNickname());
     connect(peer, &Peer::receivedOppNickname, replay, &Replay::setOppName);
 
+    ////////////////////////////////////////////////////
     // Chatbox
     chatbox = new ChatBox("Chat Box", this);
     chatbox->setSelfName(peer->getNickname());
     connect(peer, &Peer::receivedOppNickname, chatbox, &ChatBox::setOppName);
     connect(chatbox, &ChatBox::sendMessage, peer, &Peer::sendMessage);
     connect(peer, &Peer::receivedMessage, chatbox, &ChatBox::receivedMessage);
+    connect(peer, &Peer::socketError, chatbox, &ChatBox::receivedMessage); // 其他的错误信息就写在chatbox中
     chatbox->move(x() + width(), y());
     chatbox->resize(400, height());
 
-    // 其他的错误信息就写在chatbox中
-    connect(peer, &Peer::socketError, chatbox, &ChatBox::receivedMessage);
-
+    ////////////////////////////////////////////////////
     // Taunt
     for (int i = 0; i < 8; i++) {
         QAction *a = new QAction(this);
@@ -92,26 +155,9 @@ PeerWindow::PeerWindow(QWidget *parent, bool isServer) : BaseMainWindow(parent, 
     }
     connect(peer, &Peer::receivedTaunt, this, &PeerWindow::playTaunt);
 
-    // Status info
-    connect(peer, &Peer::receivedOppNickname, this, [this](QString oppName) {
-        ui->label_info->setText(QString("%1  vs  %2  |  %3  |  Latency:  ").arg(peer->getNickname(), oppName, peer->getConnectionInfo()));
-    });
-
-    // Latency
-    connect(peer, &Peer::receivedTime, this, [this](int latency) {
-        ui->label_latency->setText(QString::number(latency) + "ms");
-        if (latency < 100) {
-            ui->label_latency->setStyleSheet("color: rgb(0,255,0)");
-        } else if (latency < 200) {
-            ui->label_latency->setStyleSheet("color: rgb(255,255,0)");
-        } else {
-            ui->label_latency->setStyleSheet("color: rgb(255,0,0)");
-        }
-    });
-
+    ////////////////////////////////////////////////////
     // 等界面、Replay、ChatBox都初始化后，才可以发送Ping、NickName的数据包
     peer->sendReadyToReceiveSignal();
-
     show();
 }
 
