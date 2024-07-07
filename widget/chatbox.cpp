@@ -39,6 +39,10 @@ ChatBox::ChatBox(const QString &title, QWidget *parent) : QDockWidget(title, par
     show();
 }
 
+void ChatBox::appendText(QString s) {
+    messageDisplay->appendPlainText(QString("%1\n").arg(s));
+}
+
 void ChatBox::receivedMessage(QString s) {
     messageDisplay->appendPlainText(QString("%1: %2\n").arg(oppName, s));
 }

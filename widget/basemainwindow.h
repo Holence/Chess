@@ -19,7 +19,6 @@ public:
     ~BaseMainWindow();
     void bondBoardSlot();
 protected slots:
-    // void pieceMovedSlot(Movement m);
     void addPieceEaten(Piece *p_eaten);
     void gameEndSlot(GameState state);
 

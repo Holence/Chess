@@ -9,6 +9,7 @@ class ChatBox : public QDockWidget {
     Q_OBJECT
 public:
     ChatBox(const QString &title, QWidget *parent = nullptr);
+    void appendText(QString s);
     void receivedMessage(QString s);
     void setSelfName(QString newSelfName);
     void setOppName(QString newOppName);

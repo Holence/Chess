@@ -1,7 +1,6 @@
 #include "peerwindow.h"
 #include "network/client.h"
 #include "network/server.h"
-#include "widget/timer.h"
 #include <QComboBox>
 #include <QDialog>
 #include <QDockWidget>
@@ -9,6 +8,7 @@
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QRandomGenerator>
+#include <QTimeEdit>
 
 QMap<QString, QString> countryMap = {
     {"America", "am"},
@@ -35,14 +35,25 @@ PeerWindow::PeerWindow(QWidget *parent, bool isServer) : BaseMainWindow(parent, 
 
     this->isServer = isServer;
 
-    if (!connectDialog()) {
+    if (!openConnectDialog()) {
         close();
         return;
     }
 
+    // peer emit connectionSuccessed信号，openConnectDialog()返回true，双方已互换颜色
+    currentColor = Piece_Color::White;
+    selfColor = peer->getSelfColor();
+
     connect(peer, &Peer::socketClosed, this, &PeerWindow::socketClosedSlot);
     connect(peer, &Peer::receivedMovement, this, &PeerWindow::receivedMovementSlot);
-    connect(peer, &Peer::receivedResign, this, &PeerWindow::receivedResignSlot);
+    connect(peer, &Peer::receivedForceEnd, this, &PeerWindow::receivedForceEnd);
+
+    auto forceEndSlot = [this](int reason) {
+        // 让先通信
+        peer->sendForceLose(reason);
+        // 再gameEndSlot
+        return PeerWindow::gameForceEndSlot(reason);
+    };
 
     ////////////////////////////////////////////////////
     // Head Info (timer - name - timer)
@@ -53,15 +64,15 @@ PeerWindow::PeerWindow(QWidget *parent, bool isServer) : BaseMainWindow(parent, 
     headLayout->setMargin(0);
 
     QLabel *label_name = new QLabel();
-    label_name->setAlignment(Qt::AlignCenter);
     connect(peer, &Peer::receivedOppNickname, this, [this, label_name](QString oppName) {
         label_name->setText(QString("%1  vs  %2").arg(peer->getNickname(), oppName));
     });
 
-    Timer *selfTimer = new Timer(3, 0);
+    selfTimer = new Timer(peer->getTotalTime());
+    connect(selfTimer, &Timer::timeup, this, [forceEndSlot] { forceEndSlot(-2); }); // 自己时间到了
     QSpacerItem *timerSpacer1 = new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Minimum);
     QSpacerItem *timerSpacer2 = new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Minimum);
-    Timer *oppTimer = new Timer(3, 0);
+    oppTimer = new Timer(peer->getTotalTime());
     headLayout->addWidget(selfTimer);
     headLayout->addItem(timerSpacer1);
     headLayout->addWidget(label_name);
@@ -71,33 +82,32 @@ PeerWindow::PeerWindow(QWidget *parent, bool isServer) : BaseMainWindow(parent, 
     head_info->setLayout(headLayout);
     ui->centerLayout->addWidget(head_info);
 
+    if (currentColor == selfColor) {
+        selfTimer->resume();
+    } else {
+        oppTimer->resume();
+    }
+
+    connect(peer, &Peer::receivedSyncTime, oppTimer, &Timer::setTime); // 收到对方的时间同步包
+
     ////////////////////////////////////////////////////
     // Board
-    selfColor = peer->getSelfColor();
     board = new Board(this, selfColor, isPlayingMode);
     connect(board, &Board::pieceMoved, this, &PeerWindow::pieceMovedSlot);
     bondBoardSlot();
+
     ui->centerLayout->addWidget(board);
 
-    currentColor = Piece_Color::White;
     board->setAttribute(Qt::WA_TransparentForMouseEvents, currentColor != selfColor);
 
     // 另外绑定到通知对方
     disconnect(actionResign, nullptr, nullptr, nullptr);
-    connect(actionResign, &QAction::triggered, peer, [this] {
-        // 让先通信
-        peer->sendResign();
-        // 再gameEndSlot
-        if (selfColor == Piece_Color::White)
-            return BaseMainWindow::gameEndSlot(GameState::BlackWin);
-        else
-            return BaseMainWindow::gameEndSlot(GameState::WhiteWin);
-    });
+    connect(actionResign, &QAction::triggered, this, [forceEndSlot] { forceEndSlot(-1); }); // 自己投降
 
     ////////////////////////////////////////////////////
     // Status Bar
     QWidget *statusBar = new QWidget();
-    statusBar->setStyleSheet("background-color: rgb(96, 67, 44);font-size: 12px;");
+    statusBar->setStyleSheet("background-color: rgb(96, 67, 44); font-size: 12px;");
 
     QHBoxLayout *statusLayout = new QHBoxLayout();
     statusLayout->setSpacing(0);
@@ -111,7 +121,7 @@ PeerWindow::PeerWindow(QWidget *parent, bool isServer) : BaseMainWindow(parent, 
     statusLayout->addWidget(label_info);
 
     QLabel *label_latency = new QLabel(statusBar);
-    connect(peer, &Peer::receivedTime, this, [label_latency](int latency) {
+    connect(peer, &Peer::receivedPing, this, [label_latency](int latency) {
         label_latency->setText(QString::number(latency) + "ms");
         if (latency < 100) {
             label_latency->setStyleSheet("color: rgb(0,255,0)");
@@ -140,7 +150,7 @@ PeerWindow::PeerWindow(QWidget *parent, bool isServer) : BaseMainWindow(parent, 
     connect(peer, &Peer::receivedOppNickname, chatbox, &ChatBox::setOppName);
     connect(chatbox, &ChatBox::sendMessage, peer, &Peer::sendMessage);
     connect(peer, &Peer::receivedMessage, chatbox, &ChatBox::receivedMessage);
-    connect(peer, &Peer::socketError, chatbox, &ChatBox::receivedMessage); // 其他的错误信息就写在chatbox中
+    connect(peer, &Peer::socketError, chatbox, &ChatBox::appendText); // 其他的错误信息就写在chatbox中
     chatbox->move(x() + width(), y());
     chatbox->resize(400, height());
 
@@ -166,7 +176,7 @@ PeerWindow::~PeerWindow() {
     delete peer;
 }
 
-bool PeerWindow::connectDialog() {
+bool PeerWindow::openConnectDialog() {
     if (isServer) {
         peer = new Server(this);
     } else {
@@ -196,6 +206,17 @@ bool PeerWindow::connectDialog() {
     if (isServer) {
         // Server
         dlg->setWindowTitle("Host Server");
+
+        QLabel *total_time_label = new QLabel("Timer");
+        QTimeEdit *total_time_edit = new QTimeEdit();
+        total_time_edit->setTime(QTime(0, 5, 0));
+        total_time_edit->setMinimumTime(QTime(0, 0, 1));
+        total_time_edit->setMaximumTime(QTime(1, 0, 0));
+        total_time_edit->setDisplayFormat("mm : ss");
+        peer->setTotalTime(total_time_edit->time());
+        connect(total_time_edit, &QTimeEdit::timeChanged, peer, [this](QTime total_time) {
+            peer->setTotalTime(total_time);
+        });
 
         QLabel *label = new QLabel("Waiting connection...");
         QPushButton *rejectButton = new QPushButton("Cancel");
@@ -228,6 +249,8 @@ bool PeerWindow::connectDialog() {
         layout->addWidget(country_combo);
         layout->addWidget(color_label);
         layout->addWidget(color_combo);
+        layout->addWidget(total_time_label);
+        layout->addWidget(total_time_edit);
 
         layout->addWidget(rejectButton);
 
@@ -299,6 +322,12 @@ void PeerWindow::playTaunt(QString country, int i) {
 }
 
 void PeerWindow::pieceMovedSlot(Movement m) {
+    selfTimer->stop();
+    oppTimer->resume();
+    // 如果latency很大，本地显示的对方时钟将会比实际对方的真实时钟快，导致本地显示对方时钟已经到0时，其实对方的时钟还没到0
+    // 所以每次发送Movement包的时候，也发送自己的剩余时间，让对方同步一下
+    peer->sendSyncTime(selfTimer->getTime());
+
     replay->addMovement(m);
     peer->sendMovement(m);
     currentColor = flipPieceColor(currentColor);
@@ -307,6 +336,9 @@ void PeerWindow::pieceMovedSlot(Movement m) {
 }
 
 void PeerWindow::receivedMovementSlot(Movement m) {
+    oppTimer->stop();
+    selfTimer->resume();
+
     replay->addMovement(m);
     board->movePiece(m);
     currentColor = flipPieceColor(currentColor);
@@ -314,15 +346,54 @@ void PeerWindow::receivedMovementSlot(Movement m) {
     board->setAttribute(Qt::WA_TransparentForMouseEvents, currentColor != selfColor);
 }
 
-void PeerWindow::receivedResignSlot() {
-    BaseMainWindow::gameEndSlot(GameState::Unfinished);
+void PeerWindow::receivedForceEnd(int reason) {
+    return PeerWindow::gameForceEndSlot(-reason);
+}
+
+void PeerWindow::gameForceEndSlot(int reason) {
+    if (isPlayingMode) {
+        // 保存记录
+        replay->replaySave();
+        delete replay;
+        replay = nullptr;
+        actionResign->setDisabled(true);
+    }
+
+    board->playMedia("qrc:/sound/game-end.mp3");
+
+    QString s;
+
+    switch (reason) {
+    case -1:
+        s = QString("You Resigned");
+        break;
+    case 1:
+        s = QString("Opponent Resigned");
+        break;
+    case -2:
+        s = QString("Your time is up.\nYou Lose");
+        break;
+    case 2:
+        s = QString("Opponent's time is up.\nYou Win");
+        break;
+    default:
+        break;
+    }
+
+    board->setDisabled(true);
+
+    QMessageBox msg(this);
+    msg.setWindowTitle("Game Over");
+    msg.setText(s);
+    msg.adjustSize();
+    msg.exec();
 }
 
 void PeerWindow::socketClosedSlot() {
     if (board->isEnabled()) {
         QMessageBox::critical(this, "Critial", "Socket closed accidentally.\n(perhaps your opponent doesn't want to play with you😥)");
     } else {
-        QMessageBox::information(this, "Information", "Your opponent left the game.\n Window will close now.");
-        close();
+        chatbox->appendText("-----------------------------------------------------\nYour opponent left the game.");
     }
+    chatbox->setDisabled(true);
 }

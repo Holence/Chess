@@ -4,6 +4,7 @@
 #include "network/peer.h"
 #include "widget/basemainwindow.h"
 #include "widget/chatbox.h"
+#include "widget/timer.h"
 #include <QSettings>
 
 class PeerWindow : public BaseMainWindow {
@@ -16,14 +17,13 @@ protected slots:
 
     void socketClosedSlot();
     void receivedMovementSlot(Movement m);
-    void receivedResignSlot();
-
-    void gameEndSlot(GameState state);
+    void receivedForceEnd(int reason);
+    void gameForceEndSlot(int reason);
 
 private:
     ChatBox *chatbox;
     bool isServer;
-    bool connectDialog();
+    bool openConnectDialog();
     Peer *peer;
     Piece_Color currentColor; // 目前轮到的颜色
 
@@ -32,6 +32,7 @@ private:
     void playTaunt(QString country, int i);
 
     QSettings *settings;
+    Timer *selfTimer, *oppTimer;
 };
 
 #endif // PEERWINDOW_H

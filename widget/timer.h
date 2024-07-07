@@ -8,12 +8,19 @@ class Timer : public QLabel {
     Q_OBJECT
 
 public:
-    Timer(int minute, int second);
+    Timer(QTime total_time);
     ~Timer();
+    void stop();
+    void resume();
+    void setTime(QTime newTime);
+    QTime getTime() const;
+
 signals:
     void timeup();
 
 private:
-    QTime timer;
+    QTimer *seconder;
+    QTime time_left;
+    void tick();
 };
 #endif // TIMER_H

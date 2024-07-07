@@ -19,10 +19,7 @@ BaseMainWindow::BaseMainWindow(QWidget *parent, bool isPlayingMode)
         actionResign = new QAction(this);
         actionResign->setText("Resign");
         connect(actionResign, &QAction::triggered, this, [this] {
-            if (selfColor == Piece_Color::White)
-                return gameEndSlot(GameState::BlackWin);
-            else
-                return gameEndSlot(GameState::WhiteWin);
+            return BaseMainWindow::gameEndSlot(GameState::Unfinished);
         });
         ui->menuGame->addAction(actionResign);
 
@@ -103,14 +100,14 @@ void BaseMainWindow::gameEndSlot(GameState state) {
         break;
     default:
         // Unfinished
-        s = QString("Opponent Resigned");
+        s = QString("You Resigned");
     }
+
+    board->setDisabled(true);
 
     QMessageBox msg(this);
     msg.setWindowTitle("Game Over");
     msg.setText(s);
     msg.adjustSize();
     msg.exec();
-
-    board->setDisabled(true);
 }

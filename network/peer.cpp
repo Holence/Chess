@@ -3,9 +3,9 @@
 
 Peer::Peer(QObject *parent) : QObject{parent} {
     // 每隔5秒向对方sendPing()，对方收到后原封不动地返回，从而获得RTT
-    timer = new QTimer(this);
-    timer->setInterval(5 * 1000);
-    connect(timer, &QTimer::timeout, this, &Peer::sendPing);
+    pingTimer = new QTimer(this);
+    pingTimer->setInterval(5 * 1000);
+    connect(pingTimer, &QTimer::timeout, this, &Peer::sendPing);
 }
 
 QString Peer::getConnectionInfo() {
@@ -28,12 +28,13 @@ void Peer::disconnectSocket() {
  * 初始化，互相给对方传对方的color
  */
 void Peer::sendInializePack() {
-    QString s = "0" + QString(flipPieceColor(selfColor));
 #ifndef RTS_MODE
-    s += "0";
+    QString s = "00";
 #else
-    s += "1";
+    QString s = "01";
 #endif
+    s += flipPieceColor(selfColor) + total_time.toString(" mm ss");
+
     handleDataOut(s);
 }
 
@@ -52,12 +53,16 @@ void Peer::sendPing() {
     }
 }
 
+void Peer::sendSyncTime(QTime newTime) {
+    handleDataOut("4" + newTime.toString("mm ss"));
+}
+
 void Peer::sendMovement(Movement m) {
     handleDataOut("5" + Movement::toString(m));
 }
 
-void Peer::sendResign() {
-    handleDataOut("9");
+void Peer::sendForceLose(int reason) {
+    handleDataOut("9" + QString::number(reason));
 }
 
 void Peer::sendMessage(QString s) {
@@ -80,6 +85,14 @@ void Peer::handleDataOut(QString s) {
     tcpSocket->write(package);
 }
 
+QTime Peer::getTotalTime() const {
+    return total_time;
+}
+
+void Peer::setTotalTime(QTime newTotalTime) {
+    total_time = newTotalTime;
+}
+
 void Peer::handleDataIn() {
     QByteArray packages = tcpSocket->readAll();
     QList<QByteArray> packageList = packages.split('\n');
@@ -95,9 +108,9 @@ void Peer::handleDataIn() {
                 if (!op.isEmpty()) {
 
 #ifndef RTS_MODE
-                    if (op.at(1) != "0") {
+                    if (op.at(0) != "0") {
 #else
-                    if (op.at(1) != "1") {
+                    if (op.at(0) != "1") {
 #endif
                         if (!isServer) {
                             // client收到
@@ -110,16 +123,18 @@ void Peer::handleDataIn() {
                     } else {
                         if (!isServer) {
                             // client收到自己的颜色
-                            if (op.at(0) == 'w')
+                            if (op.at(1) == 'w')
                                 setSelfColor(Piece_Color::White);
                             else
                                 setSelfColor(Piece_Color::Black);
+
                             // 发回给server进行确认
                             sendInializePack();
+                            setTotalTime(QTime(0, op.split(" ")[1].toInt(), op.split(" ")[2].toInt()));
                             emit connectionSuccessed();
                         } else {
                             // server收到颜色确认
-                            if (op.at(0) == selfColor) {
+                            if (op.at(1) == selfColor) {
                                 emit connectionSuccessed();
                             } else {
                                 emit socketError("Color not match!!!");
@@ -129,7 +144,7 @@ void Peer::handleDataIn() {
                 } else {
                     // op = ""
                     // Ready To Receive
-                    timer->start();
+                    pingTimer->start();
                     sendPing();
                     sendNickname();
                 }
@@ -141,7 +156,7 @@ void Peer::handleDataIn() {
                     handleDataOut(s);
                 } else {
                     // server收到client返还的ping package，得到RTT
-                    emit receivedTime((QDateTime::currentMSecsSinceEpoch() - op.toLongLong()) / 2);
+                    emit receivedPing((QDateTime::currentMSecsSinceEpoch() - op.toLongLong()) / 2);
                 }
                 break;
 
@@ -151,13 +166,20 @@ void Peer::handleDataIn() {
                     handleDataOut(s);
                 } else {
                     // client收到server返还的ping package，得到RTT
-                    emit receivedTime((QDateTime::currentMSecsSinceEpoch() - op.toLongLong()) / 2);
+                    emit receivedPing((QDateTime::currentMSecsSinceEpoch() - op.toLongLong()) / 2);
                 }
                 break;
 
             case 3: // nickname
                 emit receivedOppNickname(op);
                 break;
+
+            case 4: // sync time
+            {
+                QStringList l = op.split(" ");
+                emit receivedSyncTime(QTime(0, l[0].toInt(), l[1].toInt()));
+                break;
+            }
 
             case 5: // movement
                 emit receivedMovement(Movement::fromString(op));
@@ -172,7 +194,7 @@ void Peer::handleDataIn() {
                 break;
 
             case 9: // resign
-                emit receivedResign();
+                emit receivedForceEnd(op.toInt());
                 break;
 
             default:
