@@ -19,11 +19,11 @@ Also there are two Game Version
 
 - `Chess.exe`: Normal Chess
 
-  ![demo](demo/demo.jpg)
+  ![demo](demo/demo.jpg)*Demo: Normal Chess + Single Player Mode*
 
-- `Chess-RTS.exe`: RTS Mode. King can be eaten, and when your King is dead, you can only see the area that your pieces can move to, other place will be dark. In the end, the player whose pieces are all eaten will lose.
+- `Chess-RTS.exe`: RTS Chess. King can be eaten, and when your King is dead, you can only see the area that your pieces can move to, other place will be dark. In the end, the player whose pieces are all eaten will lose.
 
-  ![demo-RTS](demo/demo-RTS.jpg)
+  ![demo-RTS](demo/demo-RTS.jpg)*Demo: RTS Chess + Multiplayer Mode*
 
 ## TODO
 
